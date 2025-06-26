@@ -1,1 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Controle de Saldos - Transportadora</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
 
+    const firebaseConfig = {
+      apiKey: "AIzaSyDmryG-PKAyU1at8VL7NPRAZAetsoO3sdY",
+      authDomain: "saldo-d8113.firebaseapp.com",
+      databaseURL: "https://saldo-d8113-default-rtdb.firebaseio.com",
+      projectId: "saldo-d8113",
+      storageBucket: "saldo-d8113.appspot.com",
+      messagingSenderId: "21759024447",
+      appId: "1:21759024447:web:55ecbcceb69d9c48f5478a",
+      measurementId: "G-78J9NTWH8L"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const storage = getStorage(app);
+    const saldosRef = ref(db, 'saldos');
+
+    const form = document.getElementById('formulario');
+    const lista = document.getElementById('lista');
+    const filtroMotorista = document.getElementById('filtroMotorista');
+    const filtroData = document.getElementById('filtroData');
+    const btnExportar = document.getElementById('btnExportar');
+    const btnFiltrar = document.getElementById('btnFiltrar');
+
+    // Função para formatar números com separador de milhar
+    const formatarNumero = (numero) => {
+      return numero.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+
+    const formatarData = (dataStr) => {
+      if (!dataStr) return '';
+      const partes = dataStr.split('-');
+      return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const dados = Object.fromEntries(new FormData(form).entries());
+      dados.valorFrete = parseFloat(dados.valorFrete);
+      dados.adiantamento = parseFloat(dados.adiantamento);
+      dados.saldo = dados.valorFrete - dados.adiantamento;
+      await push(saldosRef, dados);
+      form.reset();
+    });
+
+    let todosOsRegistros = [];
+    let dadosExportacao = [];
+
+    onValue(saldosRef, (snapshot) => {
+      const data = snapshot.val();
+      todosOsRegistros = Object.entries(data || {}).map(([key, val]) => ({ key, ...val }));
+      aplicarFiltros();
+      calcularSubtotal();
+    });
+
+    function aplicarFiltros() {
+      lista.innerHTML = '';
+      dadosExportacao = [];
+      const filtroM = filtroMotorista.value.toLowerCase();
+      const filtroD = filtroData.value;
+
+      const filtrados = todosOsRegistros.filter(val => {
+        return (!filtroM || val.motorista.toLowerCase().includes(filtroM)) &&
+               (!filtroD || val.diaViagem === filtroD);
+      });
+
+      filtrados.forEach(val => renderizarLinha(val));
+    }
+
+    function calcularSubtotal() {
+      const subtotal = todosOsRegistros.reduce((acc, val) => acc + val.saldo, 0);
+      document.getElementById('subtotal').textContent = `Subtotal Saldo: R$ ${formatarNumero(subtotal)}`;
+    }
+
+    btnFiltrar.addEventListener('click', aplicarFiltros);
+
+    function renderizarLinha(val) {
+      const tr = document.createElement('tr');
+      const bgColor = val.saldo > 0 ? 'bg-red-100' : val.saldo === 0 ? 'bg-green-100' : '';
+      tr.className = bgColor;
+      tr.innerHTML = `
+        <td class="border px-2 py-1">${val.motorista}</td>
+        <td class="border px-2 py-1">${val.transportadora}</td>
+        <td class="border px-2 py-1">${formatarData(val.diaViagem)}</td>
+        <td class="border px-2 py-1">${val.cte || '-'}</td>
+        <td class="border px-2 py-1">${val.nfe || '-'}</td>
+        <td class="border px-2 py-1">R$ ${formatarNumero(val.valorFrete)}</td>
+        <td class="border px-2 py-1">R$ ${formatarNumero(val.adiantamento)}</td>
+        <td class="border px-2 py-1">R$ ${formatarNumero(val.saldo)}</td>
+        <td class="border px-2 py-1">
+          <div class="relative">
+            <button data-key="${val.key}" class="bg-gray-500 text-white px-2 py-1 rounded text-xs actions-btn">Ações</button>
+            <div id="actions-menu-${val.key}" class="hidden absolute z-10 bg-white border rounded shadow-lg mt-2">
+              ${val.pdfUrl 
+                ? `<a href="${val.pdfUrl}" target="_blank" class="block px-4 py-2 text-blue-600 hover:bg-gray-100">Ver PDF</a>`
+                : `<button data-key="${val.key}" class="block w-full text-left px-4 py-2 text-blue-600 hover:bg-gray-100 upload-btn">Anexar PDF</button>`
+              }
+              <button data-key="${val.key}" class="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 delete-btn">Excluir</button>
+              ${val.saldo > 0 ? `<button data-key="${val.key}" class="block w-full text-left px-4 py-2 text-green-600 hover:bg-gray-100 mark-recebido-btn">Marcar como Recebido</button>` : ''}
+              <button data-key="${val.key}" class="block w-full text-left px-4 py-2 text-yellow-600 hover:bg-gray-100 edit-btn">Editar</button>
+            </div>
+          </div>
+        </td>
+      `;
+
+      lista.appendChild(tr);
+
+      dadosExportacao.push({
+        Motorista: val.motorista,
+        Transportadora: val.transportadora,
+        "Dia Viagem": formatarData(val.diaViagem),
+        CTe: val.cte || '',
+        NFe: val.nfe || '',
+        "Frete (R$)": formatarNumero(val.valorFrete),
+        "Adiantamento (R$)": formatarNumero(val.adiantamento),
+        "Saldo (R$)": formatarNumero(val.saldo),
+        PDF: val.pdfUrl || ''
+      });
+    }
+
+    btnExportar.addEventListener('click', () => {
+      const ws = XLSX.utils.json_to_sheet(dadosExportacao);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Saldos');
+      XLSX.writeFile(wb, 'saldos.xlsx');
+    });
+
+    document.addEventListener('click', async (e) => {
+      const key = e.target.getAttribute('data-key');
+
+      if (e.target.classList.contains('actions-btn')) {
+        const menu = document.getElementById(`actions-menu-${key}`);
+        menu.classList.toggle('hidden');
+      }
+
+      if (e.target.classList.contains('upload-btn')) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'application/pdf';
+        input.style.display = 'none';
+        document.body.appendChild(input);
+        input.click();
+
+        input.addEventListener('change', async () => {
+          const file = input.files[0];
+          if (file) {
+            const fileRef = storageRef(storage, `pdfs/${key}.pdf`);
+            await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(fileRef);
+            await update(ref(db, `saldos/${key}`), { pdfUrl: url });
+            alert('PDF anexado com sucesso!');
+            location.reload();
+          }
+          document.body.removeChild(input);
+        });
+      }
+
+      if (e.target.classList.contains('delete-btn')) {
+        if (confirm('Tem certeza que deseja excluir este saldo?')) {
+          await remove(ref(db, `saldos/${key}`));
+          alert('Saldo excluído com sucesso!');
+          location.reload();
+        }
+      }
+
+      if (e.target.classList.contains('mark-recebido-btn')) {
+        let dataDigitada = prompt('Digite a data de recebimento (ex: 26/06/2025 16:27) ou deixe em branco para usar a data atual:');
+
+        if (dataDigitada === null) return;
+
+        if (!dataDigitada.trim()) {
+          const dataAtual = new Date();
+          dataDigitada = `${dataAtual.getDate().toString().padStart(2, '0')}/${
+            (dataAtual.getMonth() + 1).toString().padStart(2, '0')
+          }/${dataAtual.getFullYear()} ${dataAtual.getHours().toString().padStart(2, '0')}:${
+            dataAtual.getMinutes().toString().padStart(2, '0')
+          }`;
+        }
+
+        await update(ref(db, `saldos/${key}`), { saldo: 0, dataRecebimento: dataDigitada });
+        alert('Saldo marcado como recebido!');
+        location.reload();
+      }
+
+      if (e.target.classList.contains('edit-btn')) {
+        const registro = todosOsRegistros.find(r => r.key === key);
+        if (registro) {
+          const formHTML = `
+            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div class="bg-white p-6 rounded shadow-lg w-96">
+                <h2 class="text-xl font-bold mb-4">Editar Registro</h2>
+                <form id="edit-form-${key}" class="grid grid-cols-2 gap-4">
+                  <input name="motorista" value="${registro.motorista}" class="border p-2 rounded" required />
+                  <input name="transportadora" value="${registro.transportadora}" class="border p-2 rounded" required />
+                  <input type="date" name="diaViagem" value="${registro.diaViagem}" class="border p-2 rounded" required />
+                  <input name="cte" value="${registro.cte || ''}" class="border p-2 rounded" />
+                  <input name="nfe" value="${registro.nfe || ''}" class="border p-2 rounded" />
+                  <input type="number" name="valorFrete" value="${registro.valorFrete}" step="0.01" class="border p-2 rounded" required />
+                  <input type="number" name="adiantamento" value="${registro.adiantamento}" step="0.01" class="border p-2 rounded" required />
+                  <button type="submit" class="bg-blue-600 text-white p-2 rounded col-span-2">Salvar Alterações</button>
+                </form>
+                <button id="close-edit-${key}" class="mt-4 bg-red-600 text-white p-2 rounded w-full">Fechar</button>
+              </div>
+            </div>
+          `;
+          document.body.insertAdjacentHTML('beforeend', formHTML);
+
+          const editForm = document.getElementById(`edit-form-${key}`);
+          const closeBtn = document.getElementById(`close-edit-${key}`);
+
+          editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const dados = Object.fromEntries(new FormData(editForm).entries());
+            dados.valorFrete = parseFloat(dados.valorFrete);
+            dados.adiantamento = parseFloat(dados.adiantamento);
+            dados.saldo = dados.valorFrete - dados.adiantamento;
+            await update(ref(db, `saldos/${key}`), dados);
+            alert('Registro atualizado com sucesso!');
+            document.querySelector(`.fixed`).remove();
+            location.reload();
+          });
+
+          closeBtn.addEventListener('click', () => {
+            document.querySelector(`.fixed`).remove();
+          });
+        }
+      }
+    });
+
+    // Fechar menu ao clicar fora
+    document.addEventListener('click', (e) => {
+      const menus = document.querySelectorAll('[id^="actions-menu-"]');
+      menus.forEach(menu => {
+        if (!menu.contains(e.target) && !e.target.classList.contains('actions-btn')) {
+          menu.classList.add('hidden');
+        }
+      });
+    });
+  </script>
+</head>
+<body class="bg-gray-100 p-4">
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold mb-4">Controle de Saldos</h1>
+    <div id="subtotal" class="text-xl font-bold mb-4"></div>
+
+    <form id="formulario" class="grid grid-cols-2 md:grid-cols-3 gap-4 bg-white p-4 rounded shadow">
+      <input name="motorista" placeholder="Motorista" required class="border p-2 rounded" />
+      <input name="transportadora" placeholder="Transportadora" required class="border p-2 rounded" />
+      <input type="date" name="diaViagem" required class="border p-2 rounded" />
+      <input name="cte" placeholder="CTe" class="border p-2 rounded" />
+      <input name="nfe" placeholder="NFe" class="border p-2 rounded" />
+      <input type="number" name="valorFrete" placeholder="Valor Frete" step="0.01" required class="border p-2 rounded" />
+      <input type="number" name="adiantamento" placeholder="Adiantamento" step="0.01" required class="border p-2 rounded" />
+      <button type="submit" class="bg-blue-600 text-white p-2 rounded col-span-2 md:col-span-1">Salvar</button>
+    </form>
+
+    <div class="flex flex-wrap gap-4 my-4">
+      <input id="filtroMotorista" placeholder="Filtrar Motorista" class="border p-2 rounded" />
+      <input id="filtroData" type="date" class="border p-2 rounded" />
+      <button id="btnFiltrar" class="bg-blue-500 text-white px-4 py-2 rounded">Aplicar Filtros</button>
+      <button id="btnExportar" class="bg-green-600 text-white px-4 py-2 rounded">Exportar .xlsx</button>
+    </div>
+
+    <h2 class="text-xl font-bold my-2">Registros</h2>
+    <div>
+      <table class="w-full bg-white rounded shadow text-sm">
+        <thead>
+          <tr class="bg-gray-200 text-sm">
+            <th class="border px-2 py-1">Motorista</th>
+            <th class="border px-2 py-1">Transp.</th>
+            <th class="border px-2 py-1">Viagem</th>
+            <th class="border px-2 py-1">CTe</th>
+            <th class="border px-2 py-1">NFe</th>
+            <th class="border px-2 py-1">Frete</th>
+            <th class="border px-2 py-1">Adiant.</th>
+            <th class="border px-2 py-1">Saldo</th>
+            <th class="border px-2 py-1">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="lista"></tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>
