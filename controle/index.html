@@ -30,7 +30,9 @@
     const form = document.getElementById('formulario');
     const lista = document.getElementById('lista');
     const filtroMotorista = document.getElementById('filtroMotorista');
+    const filtroTransportadora = document.getElementById('filtroTransportadora');
     const filtroData = document.getElementById('filtroData');
+    const filtroCte = document.getElementById('filtroCte');
     const btnExportar = document.getElementById('btnExportar');
     const btnFiltrar = document.getElementById('btnFiltrar');
 
@@ -47,6 +49,11 @@
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const senha = prompt('Digite a senha:');
+      if (senha !== '35280712') {
+        alert('Senha incorreta!');
+        return;
+      }
       const dados = Object.fromEntries(new FormData(form).entries());
       dados.valorFrete = parseFloat(dados.valorFrete);
       dados.adiantamento = parseFloat(dados.adiantamento);
@@ -69,11 +76,15 @@
       lista.innerHTML = '';
       dadosExportacao = [];
       const filtroM = filtroMotorista.value.toLowerCase();
+      const filtroT = filtroTransportadora.value.toLowerCase();
       const filtroD = filtroData.value;
+      const filtroC = filtroCte.value.toLowerCase();
 
       const filtrados = todosOsRegistros.filter(val => {
         return (!filtroM || val.motorista.toLowerCase().includes(filtroM)) &&
-               (!filtroD || val.diaViagem === filtroD);
+               (!filtroT || val.transportadora.toLowerCase().includes(filtroT)) &&
+               (!filtroD || val.diaViagem === filtroD) &&
+               (!filtroC || (val.cte && val.cte.toLowerCase().includes(filtroC)));
       });
 
       filtrados.forEach(val => renderizarLinha(val));
@@ -141,6 +152,11 @@
       const key = e.target.getAttribute('data-key');
 
       if (e.target.classList.contains('actions-btn')) {
+        const senha = prompt('Digite a senha:');
+        if (senha !== '35280712') {
+          alert('Senha incorreta!');
+          return;
+        }
         const menu = document.getElementById(`actions-menu-${key}`);
         menu.classList.toggle('hidden');
       }
@@ -222,6 +238,11 @@
 
           editForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const senha = prompt('Digite a senha:');
+            if (senha !== '35280712') {
+              alert('Senha incorreta!');
+              return;
+            }
             const dados = Object.fromEntries(new FormData(editForm).entries());
             dados.valorFrete = parseFloat(dados.valorFrete);
             dados.adiantamento = parseFloat(dados.adiantamento);
@@ -261,13 +282,15 @@
       <input type="date" name="diaViagem" required class="border p-2 rounded" />
       <input name="cte" placeholder="CTe" class="border p-2 rounded" />
       <input name="nfe" placeholder="NFe" class="border p-2 rounded" />
-      <input type="number" name="valorFrete" placeholder="Valor Frete" step="0.01" required class="border p-2 rounded" />
+      <input type="number" name="valorFrete" placeholder="Valor Frete" step="0.01" required class="borderUSB p-2 rounded" />
       <input type="number" name="adiantamento" placeholder="Adiantamento" step="0.01" required class="border p-2 rounded" />
       <button type="submit" class="bg-blue-600 text-white p-2 rounded col-span-2 md:col-span-1">Salvar</button>
     </form>
 
     <div class="flex flex-wrap gap-4 my-4">
       <input id="filtroMotorista" placeholder="Filtrar Motorista" class="border p-2 rounded" />
+      <input id="filtroTransportadora" placeholder="Filtrar Transportadora" class="border p-2 rounded" />
+      <input id="filtroCte" placeholder="Filtrar CTe" class="border p-2 rounded" />
       <input id="filtroData" type="date" class="border p-2 rounded" />
       <button id="btnFiltrar" class="bg-blue-500 text-white px-4 py-2 rounded">Aplicar Filtros</button>
       <button id="btnExportar" class="bg-green-600 text-white px-4 py-2 rounded">Exportar .xlsx</button>
