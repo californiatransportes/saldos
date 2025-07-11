@@ -110,6 +110,7 @@
         <td class="border px-2 py-1">R$ ${formatarNumero(val.valorFrete)}</td>
         <td class="border px-2 py-1">R$ ${formatarNumero(val.adiantamento)}</td>
         <td class="border px-2 py-1">R$ ${formatarNumero(val.saldo)}</td>
+        <td class="border px-2 py-1">${val.dataRecebimento ? val.dataRecebimento : '-'}</td>
         <td class="border px-2 py-1">
           <div class="relative">
             <button data-key="${val.key}" class="bg-gray-500 text-white px-2 py-1 rounded text-xs actions-btn">Ações</button>
@@ -137,6 +138,7 @@
         "Frete (R$)": formatarNumero(val.valorFrete),
         "Adiantamento (R$)": formatarNumero(val.adiantamento),
         "Saldo (R$)": formatarNumero(val.saldo),
+        "Data Pagamento": val.dataRecebimento || '',
         PDF: val.pdfUrl || ''
       });
     }
@@ -273,7 +275,7 @@
 </head>
 <body class="bg-gray-100 p-4">
   <div class="max-w-6xl mx-auto">
-<center><img src="https://i.ibb.co/ksSbDJKH/33fbdb6f-b2d9-44c4-963e-c559e83d6766.png" alt="Descrição da imagem" width="300" height="200"></center>
+    <center><img src="https://i.ibb.co/ksSbDJKH/33fbdb6f-b2d9-44c4-963e-c559e83d6766.png" alt="Descrição da imagem" width="300" height="200"></center>
 
     <center><div id="subtotal" class="text-xl font-bold mb-4"></div></center>
 
@@ -310,6 +312,7 @@
             <th class="border px-2 py-1">Frete</th>
             <th class="border px-2 py-1">Adiant.</th>
             <th class="border px-2 py-1">Saldo</th>
+            <th class="border px-2 py-1">Data Pagamento</th>
             <th class="border px-2 py-1">Ações</th>
           </tr>
         </thead>
