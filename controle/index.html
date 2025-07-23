@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -73,23 +74,32 @@
       calcularSubtotal();
     });
 
-    function aplicarFiltros() {
-      lista.innerHTML = '';
-      dadosExportacao = [];
-      const filtroM = filtroMotorista.value.toLowerCase();
-      const filtroT = filtroTransportadora.value.toLowerCase();
-      const filtroD = filtroData.value;
-      const filtroC = filtroCte.value.toLowerCase();
+function aplicarFiltros() {
+  lista.innerHTML = '';
+  dadosExportacao = [];
+  const filtroM = filtroMotorista.value.toLowerCase();
+  const filtroT = filtroTransportadora.value.toLowerCase();
+  const filtroD = filtroData.value;
+  const filtroC = filtroCte.value.toLowerCase();
 
-      const filtrados = todosOsRegistros.filter(val => {
-        return (!filtroM || val.motorista.toLowerCase().includes(filtroM)) &&
-               (!filtroT || val.transportadora.toLowerCase().includes(filtroT)) &&
-               (!filtroD || val.diaViagem === filtroD) &&
-               (!filtroC || (val.cte && val.cte.toLowerCase().includes(filtroC)));
-      });
+  // Filtrar
+  let filtrados = todosOsRegistros.filter(val => {
+    return (!filtroM || val.motorista.toLowerCase().includes(filtroM)) &&
+           (!filtroT || val.transportadora.toLowerCase().includes(filtroT)) &&
+           (!filtroD || val.diaViagem === filtroD) &&
+           (!filtroC || (val.cte && val.cte.toLowerCase().includes(filtroC)));
+  });
 
-      filtrados.forEach(val => renderizarLinha(val));
-    }
+  // Ordenar: primeiro os que têm saldo > 0 (em aberto), depois saldo = 0 (pagos)
+  filtrados.sort((a, b) => {
+    const saldoA = a.saldo > 0 ? 0 : 1; // em aberto = 0 (vem antes)
+    const saldoB = b.saldo > 0 ? 0 : 1;
+    return saldoA - saldoB;
+  });
+
+  filtrados.forEach(val => renderizarLinha(val));
+}
+
 
     function calcularSubtotal() {
       const subtotal = todosOsRegistros.reduce((acc, val) => acc + val.saldo, 0);
