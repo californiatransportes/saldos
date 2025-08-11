@@ -75,7 +75,7 @@
         <input type="date" name="diaViagem" required class="border p-2 rounded" />
         <input name="cte" placeholder="CTe" class="border p-2 rounded" />
         <input name="nfe" placeholder="NFe" class="border p-2 rounded" />
-        <input name="status" placeholder="Status" class="border p-2 rounded" />
+        <input name="status" placeholder="Status" class="border p-2 rounded" readonly />
         <input name="codigoRastreio" placeholder="Código de Rastreio" class="border p-2 rounded" />
         <input type="number" name="valorFrete" placeholder="Valor Frete" step="0.01" required class="border p-2 rounded" />
         <input type="number" name="adiantamento" placeholder="Adiantamento" step="0.01" required class="border p-2 rounded" />
@@ -115,7 +115,6 @@
         <tbody id="lista"></tbody>
       </table>
     </section>
-
 
     <footer class="text-center text-gray-500 text-xs">Desenvolvido by Je4nGomes 💻</footer>
   </div>
@@ -382,7 +381,7 @@
               <input type="date" name="diaViagem" value="${registro.diaViagem || ''}" class="border p-2 rounded" required />
               <input name="cte" value="${registro.cte || ''}" class="border p-2 rounded" />
               <input name="nfe" value="${registro.nfe || ''}" class="border p-2 rounded" />
-              <input name="status" value="${registro.status || ''}" class="border p-2 rounded" />
+              <input name="status" value="${registro.status || ''}" class="border p-2 rounded" readonly />
               <input name="codigoRastreio" value="${registro.codigoRastreio || ''}" class="border p-2 rounded" />
               <input type="number" name="valorFrete" value="${registro.valorFrete || 0}" step="0.01" class="border p-2 rounded" required />
               <input type="number" name="adiantamento" value="${registro.adiantamento || 0}" step="0.01" class="border p-2 rounded" required />
@@ -395,10 +394,55 @@
         `;
         document.body.appendChild(modal);
 
+        // Adicionar funcionalidade de popup de status no formulário de edição
+        const editStatusInput = modal.querySelector('input[name="status"]');
+        const editStatusPopup = document.createElement('div');
+        editStatusPopup.id = `edit-status-popup-${key}`;
+        editStatusPopup.className = 'hidden fixed inset-0 modal-bg flex items-center justify-center z-50';
+        editStatusPopup.innerHTML = `
+          <div class="bg-white p-6 rounded shadow-lg w-96">
+            <h2 class="text-xl font-bold mb-4">Selecionar Status</h2>
+            <div id="edit-status-options-${key}" class="grid gap-4">
+              <button data-status="Na empresa, não enviado" class="bg-red-500 text-white p-2 rounded w-full">Na empresa, não enviado</button>
+              <button data-status="Com motorista" class="bg-orange-500 text-white p-2 rounded w-full">Com motorista</button>
+              <button data-status="Enviado para recebimento" class="bg-blue-500 text-white p-2 rounded w-full">Enviado para recebimento</button>
+              <button data-status="Pago" class="bg-green-500 text-white p-2 rounded w-full">Pago</button>
+            </div>
+            <button id="edit-close-status-popup-${key}" class="mt-4 bg-gray-600 text-white p-2 rounded w-full">Fechar</button>
+          </div>
+        `;
+        document.body.appendChild(editStatusPopup);
+
+        editStatusInput.addEventListener('click', () => {
+          editStatusPopup.classList.remove('hidden');
+        });
+
+        const editStatusOptions = document.getElementById(`edit-status-options-${key}`);
+        editStatusOptions.addEventListener('click', (e) => {
+          if (e.target.tagName === 'BUTTON' && e.target.getAttribute('data-status')) {
+            editStatusInput.value = e.target.getAttribute('data-status');
+            editStatusPopup.classList.add('hidden');
+          }
+        });
+
+        const editCloseStatusPopup = document.getElementById(`edit-close-status-popup-${key}`);
+        editCloseStatusPopup.addEventListener('click', () => {
+          editStatusPopup.classList.add('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!editStatusPopup.contains(e.target) && e.target !== editStatusInput) {
+            editStatusPopup.classList.add('hidden');
+          }
+        });
+
         const editForm = document.getElementById(`form-edit-${key}`);
         const cancelBtn = document.getElementById(`cancel-edit-${key}`);
 
-        cancelBtn.onclick = () => modal.remove();
+        cancelBtn.onclick = () => {
+          modal.remove();
+          editStatusPopup.remove();
+        };
 
         editForm.addEventListener('submit', async (ev) => {
           ev.preventDefault();
@@ -411,6 +455,7 @@
           await update(ref(db, `saldos/${key}`), dados);
           alert('Registro atualizado!');
           modal.remove();
+          editStatusPopup.remove();
         });
       }
 
@@ -429,9 +474,7 @@
               <button data-status="Enviado para recebimento" class="btn-status bg-blue-500 text-white p-2 rounded">Enviado para recebimento</button>
               <button data-status="Pago" class="btn-status bg-green-500 text-white p-2 rounded">Pago</button>
             </div>
-            <div class="mt-4">
-              <button id="close-status-${key}" class="bg-gray-400 text-white p-2 rounded w-full">Fechar</button>
-            </div>
+            <button id="close-status-${key}" class="bg-gray-400 text-white p-2 rounded w-full">Fechar</button>
           </div>
         `;
         document.body.appendChild(modal);
@@ -459,6 +502,52 @@
       document.querySelectorAll('[id^="actions-menu-"]').forEach(menu => {
         if (!menu.contains(e.target) && !e.target.classList.contains('actions-btn')) {
           menu.classList.add('hidden');
+        }
+      });
+    });
+
+    // Adicionar evento para abrir a janela de seleção de status no formulário
+    document.addEventListener('DOMContentLoaded', () => {
+      const statusInput = document.querySelector('input[name="status"]');
+      statusInput.readOnly = true; // Tornar o campo readonly
+      const statusPopup = document.createElement('div');
+      statusPopup.id = 'status-popup';
+      statusPopup.className = 'hidden fixed inset-0 modal-bg flex items-center justify-center z-50';
+      statusPopup.innerHTML = `
+        <div class="bg-white p-6 rounded shadow-lg w-96">
+          <h2 class="text-xl font-bold mb-4">Selecionar Status</h2>
+          <div id="status-options" class="grid gap-4">
+            <button data-status="Na empresa, não enviado" class="bg-red-500 text-white p-2 rounded w-full">Na empresa, não enviado</button>
+            <button data-status="Com motorista" class="bg-orange-500 text-white p-2 rounded w-full">Com motorista</button>
+            <button data-status="Enviado para recebimento" class="bg-blue-500 text-white p-2 rounded w-full">Enviado para recebimento</button>
+            <button data-status="Pago" class="bg-green-500 text-white p-2 rounded w-full">Pago</button>
+          </div>
+          <button id="close-status-popup" class="mt-4 bg-gray-600 text-white p-2 rounded w-full">Fechar</button>
+        </div>
+      `;
+      document.body.appendChild(statusPopup);
+
+      statusInput.addEventListener('click', () => {
+        statusPopup.classList.remove('hidden');
+      });
+
+      const statusOptions = document.getElementById('status-options');
+      statusOptions.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON' && e.target.getAttribute('data-status')) {
+          statusInput.value = e.target.getAttribute('data-status');
+          statusPopup.classList.add('hidden');
+        }
+      });
+
+      const closeStatusPopup = document.getElementById('close-status-popup');
+      closeStatusPopup.addEventListener('click', () => {
+        statusPopup.classList.add('hidden');
+      });
+
+      // Fechar popup ao clicar fora
+      document.addEventListener('click', (e) => {
+        if (!statusPopup.contains(e.target) && e.target !== statusInput) {
+          statusPopup.classList.add('hidden');
         }
       });
     });
@@ -540,7 +629,7 @@
             // se formato dd/mm/yyyy hh:mm
             const m = s.match(/(\d{2})\/(\d{2})\/(\d{4})/);
             if (!m) return null;
-            return new Date(`${m[3]}-${m[2]}-${m[1]}T00:00:00`);
+ return new Date(`${m[3]}-${m[2]}-${m[1]}T00:00:00`);
           })(r.dataRecebimento);
           if (dr) countsByDay[dr.getDay()]++;
         }
@@ -558,7 +647,6 @@
 
     // export/import de dados (dadosExportacao é atualizado em render)
     // (já configurado no botão)
-
   </script>
 </body>
 </html>
