@@ -77,8 +77,8 @@
         <input name="nfe" placeholder="NFe" class="border p-2 rounded" />
         <input name="status" placeholder="Status" class="border p-2 rounded" readonly />
         <input name="codigoRastreio" placeholder="Código de Rastreio" class="border p-2 rounded" />
-        <input type="number" name="valorFrete" placeholder="Valor Frete" step="0.01" required class="border p-2 rounded" />
-        <input type="number" name="adiantamento" placeholder="Adiantamento" step="0.01" required class="border p-2 rounded" />
+        <input type="number" name="valorFrete" placeholder="Valor Frete" step="0.01" required class="border p-2 py-1 rounded" />
+        <input type="number" name="adiantamento" placeholder="Adiantamento" step="0.01" required class="border p-2 py-1 rounded" />
         <button type="submit" class="bg-blue-600 text-white p-2 rounded col-span-2 md:col-span-1">Salvar (senha)</button>
       </form>
 
@@ -98,6 +98,7 @@
       <table class="min-w-full text-sm table-auto">
         <thead>
           <tr class="bg-gray-100">
+            <th class="border px-2 py-1"><input type="checkbox" id="selectAll"></th>
             <th class="border px-2 py-1">Motorista</th>
             <th class="border px-2 py-1">Transp.</th>
             <th class="border px-2 py-1">Viagem</th>
@@ -260,6 +261,7 @@
       const desdeEnvio = val.dataEnvio ? diasDesde(val.dataEnvio) : '-';
 
       tr.innerHTML = `
+        <td class="border px-2 py-1"><input type="checkbox" class="rowCheck" data-saldo="${val.saldo || 0}" data-key="${val.key}"></td>
         <td class="border px-2 py-1">${val.motorista || '-'}</td>
         <td class="border px-2 py-1">${val.transportadora || '-'}</td>
         <td class="border px-2 py-1">${val.diaViagem ? ( (d=> `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`)(new Date(val.diaViagem)) ) : '-'}</td>
@@ -641,6 +643,44 @@
         cal.appendChild(el);
       });
     }
+
+    // Adicionar listener para checkboxes
+    lista.addEventListener('change', (e) => {
+        if (e.target.classList.contains('rowCheck')) {
+            const checkboxes = document.querySelectorAll('.rowCheck');
+            let totalSelecionado = 0;
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    totalSelecionado += parseFloat(checkbox.getAttribute('data-saldo') || 0);
+                }
+            });
+            CARD_SALDO.textContent = `R$ ${formatarNumero(totalSelecionado)}`;
+        }
+    });
+
+    // Adicionar listener para selecionar/desmarcar todos
+    document.getElementById('selectAll').addEventListener('change', (e) => {
+        const checkboxes = document.querySelectorAll('.rowCheck');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = e.target.checked;
+        });
+        const totalSelecionado = e.target.checked ? todosOsRegistros.reduce((acc, r) => acc + Number(r.saldo || 0), 0) : 0;
+        CARD_SALDO.textContent = `R$ ${formatarNumero(totalSelecionado)}`;
+    });
+
+    // Atualizar total ao aplicar filtros
+    btnFiltrar.addEventListener('click', () => {
+        setTimeout(() => {
+            const checkboxes = document.querySelectorAll('.rowCheck');
+            let totalSelecionado = 0;
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    totalSelecionado += parseFloat(checkbox.getAttribute('data-saldo') || 0);
+                }
+            });
+            CARD_SALDO.textContent = `R$ ${formatarNumero(totalSelecionado)}`;
+        }, 0);
+    });
 
     // inicial: montar vazios
     montarCardsCharts();
