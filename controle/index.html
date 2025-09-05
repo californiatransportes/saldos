@@ -60,7 +60,7 @@
 
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
       <div class="bg-white p-4 rounded-lg shadow lg:col-span-2">
-        <canvas id="chart-saldo" height="120"></canvas>
+        <canvas id="chart-saldo" height="200"></canvas> <!-- Aumentei a altura para melhor visualização -->
       </div>
       <div class="bg-white p-4 rounded-lg shadow">
         <canvas id="chart-status" height="240"></canvas>
@@ -161,6 +161,9 @@
     // Chart placeholders
     let chartStatus = null;
     let chartSaldo = null;
+
+    // Variável para controle de autenticação da senha
+    let senhaAutenticada = false;
 
     // helpers
     const senhaMestra = '35280712';
@@ -320,10 +323,13 @@
     // ESCUTAR CLIQUES (menu ações)
     document.addEventListener('click', async (e) => {
       const key = e.target.getAttribute('data-key');
-      // abrir menu ações (proteção por senha)
+      // abrir menu ações (proteção por senha apenas na primeira vez)
       if (e.target.classList.contains('actions-btn')) {
-        const senha = prompt('Digite a senha:');
-        if (senha !== senhaMestra) { alert('Senha incorreta!'); return; }
+        if (!senhaAutenticada) {
+          const senha = prompt('Digite a senha:');
+          if (senha !== senhaMestra) { alert('Senha incorreta!'); return; }
+          senhaAutenticada = true;
+        }
         const menu = document.getElementById(`actions-menu-${key}`);
         if (menu) menu.classList.toggle('hidden');
       }
@@ -388,7 +394,7 @@
               <input type="number" name="valorFrete" value="${registro.valorFrete || 0}" step="0.01" class="border p-2 rounded" required />
               <input type="number" name="adiantamento" value="${registro.adiantamento || 0}" step="0.01" class="border p-2 rounded" required />
               <div class="col-span-2 flex gap-2">
-                <button type="submit" class="bg-blue-600 text-white p-2 rounded flex-1">Salvar (senha)</button>
+                <button type="submit" class="bg-blue-600 text-white p-2 rounded flex-1">Salvar</button>
                 <button type="button" id="cancel-edit-${key}" class="bg-gray-400 text-white p-2 rounded flex-1">Cancelar</button>
               </div>
             </form>
@@ -448,8 +454,6 @@
 
         editForm.addEventListener('submit', async (ev) => {
           ev.preventDefault();
-          const senha = prompt('Digite a senha:');
-          if (senha !== senhaMestra) { alert('Senha incorreta!'); return; }
           const dados = Object.fromEntries(new FormData(editForm).entries());
           dados.valorFrete = parseFloat(dados.valorFrete || 0);
           dados.adiantamento = parseFloat(dados.adiantamento || 0);
@@ -483,8 +487,6 @@
 
         modal.querySelectorAll('.btn-status').forEach(btn => {
           btn.addEventListener('click', async (ev) => {
-            const senha = prompt('Digite a senha:');
-            if (senha !== senhaMestra) { alert('Senha incorreta!'); return; }
             const novoStatus = ev.currentTarget.getAttribute('data-status');
             const updates = { status: novoStatus };
             // se marcar "Enviado para recebimento", defina dataEnvio
@@ -570,15 +572,25 @@
       CARD_ABERTO.textContent = totais.aberto;
       CARD_PAGOS.textContent = totais.pago;
 
-      // preparar dados para charts
-      const statusCount = {};
-      const saldoPorData = {}; // soma de saldo por dataInsercao (dia)
+      // Preparar dados para o gráfico de linhas (saldo acumulado por mês)
+      const saldoPorMes = {};
+      const statusCount = {}; // Inicializado aqui
       todosOsRegistros.forEach(r => {
+        const data = r.diaViagem ? new Date(r.diaViagem) : (r.dataInsercao ? new Date(r.dataInsercao) : null);
+        if (data && !isNaN(data)) {
+          const mesAno = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+          saldoPorMes[mesAno] = (saldoPorMes[mesAno] || 0) + Number(r.saldo || 0);
+        }
         const s = r.status || 'Outro';
         statusCount[s] = (statusCount[s] || 0) + 1;
-        // agrupando por dia de diaViagem para gráfico de barras
-        const dia = r.diaViagem || (r.dataInsercao ? r.dataInsercao.split('T')[0] : 'sem-data');
-        saldoPorData[dia] = (saldoPorData[dia] || 0) + Number(r.saldo || 0);
+      });
+
+      // Calcular soma acumulada
+      const labels = Object.keys(saldoPorMes).sort();
+      let somaAcumulada = 0;
+      const valoresAcumulados = labels.map(mes => {
+        somaAcumulada += saldoPorMes[mes];
+        return somaAcumulada;
       });
 
       // Chart - STATUS (pizza)
@@ -593,15 +605,29 @@
         options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
       });
 
-      // Chart - SALDO (barra)
+      // Chart - SALDO (linhas com soma acumulada)
       const ctxSaldo = document.getElementById('chart-saldo').getContext('2d');
       if (chartSaldo) chartSaldo.destroy();
-      const labels = Object.keys(saldoPorData).sort();
-      const valores = labels.map(l => saldoPorData[l]);
       chartSaldo = new Chart(ctxSaldo, {
-        type: 'bar',
-        data: { labels, datasets: [{ label: 'Saldo (R$)', data: valores }] },
-        options: { responsive: true, plugins: { legend: { display: false } } }
+        type: 'line',
+        data: {
+          labels: labels.map(mes => `${mes.split('-')[1]}/${mes.split('-')[0].slice(-2)}`), // Formato MM/YY
+          datasets: [{
+            label: 'Soma Acumulada de Saldos (R$)',
+            data: valoresAcumulados,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+            fill: true,
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: true } },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
       });
 
       // ranking (top por saldo aberto)
@@ -611,32 +637,27 @@
         if (!rankingMap[r.motorista]) rankingMap[r.motorista] = 0;
         rankingMap[r.motorista] += Number(r.saldo || 0);
       });
-      const rankingArr = Object.entries(rankingMap).map(([m, s]) => ({ motorista: m, saldo: s })).sort((a,b)=>b.saldo-a.saldo);
-      rankingDiv.innerHTML = rankingArr.slice(0,10).map(r => `<div class="flex justify-between"><span>${r.motorista}</span><span>R$ ${formatarNumero(r.saldo)}</span></div>`).join('');
+      const rankingArr = Object.entries(rankingMap).map(([m, s]) => ({ motorista: m, saldo: s })).sort((a, b) => b.saldo - a.saldo);
+      rankingDiv.innerHTML = rankingArr.slice(0, 10).map(r => `<div class="flex justify-between"><span>${r.motorista}</span><span>R$ ${formatarNumero(r.saldo)}</span></div>`).join('');
       
       // calendário simples (apenas quantidade por dia)
       const cal = document.getElementById('calendario');
-      const days = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+      const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
       cal.innerHTML = '';
-      // calcular por dia da semana: quantos pagos (dataRecebimento) por dia
-      const countsByDay = [0,0,0,0,0,0,0];
+      const countsByDay = [0, 0, 0, 0, 0, 0, 0];
       todosOsRegistros.forEach(r => {
         if (r.dataRecebimento) {
-          const d = new Date();
-          // tentar converter dd/mm/yyyy hh:mm -> criar objeto, se falhar ignore
-          const dr = (function parseDateStr(s){
-            if(!s) return null;
-            // se formato ISO:
+          const dr = (function parseDateStr(s) {
+            if (!s) return null;
             if (s.includes('T')) return new Date(s);
-            // se formato dd/mm/yyyy hh:mm
             const m = s.match(/(\d{2})\/(\d{2})\/(\d{4})/);
             if (!m) return null;
- return new Date(`${m[3]}-${m[2]}-${m[1]}T00:00:00`);
+            return new Date(`${m[3]}-${m[2]}-${m[1]}T00:00:00`);
           })(r.dataRecebimento);
           if (dr) countsByDay[dr.getDay()]++;
         }
       });
-      days.forEach((d,i)=> {
+      days.forEach((d, i) => {
         const el = document.createElement('div');
         el.className = 'p-2 border rounded bg-gray-50';
         el.innerHTML = `<strong>${d}</strong><div class="text-xs mt-1">${countsByDay[i]} recebidos</div>`;
