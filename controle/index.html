@@ -9,20 +9,31 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* pequenas customizações para o menu ações parecido com a imagem */
     .actions-menu {
       min-width: 180px;
       border-radius: 8px;
       overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      top: 100%; /* abre para baixo */
+      right: 0;
     }
     .actions-menu button, .actions-menu a {
-      display:block;
-      width:100%;
-      padding:10px 12px;
-      text-align:left;
+      display: block;
+      width: 100%;
+      padding: 8px 12px;
+      text-align: left;
+      font-size: 0.875rem;
     }
-    /* efeito sutil no modal */
     .modal-bg { background: rgba(0,0,0,0.5); }
+    .acoes-col { width: 1%; white-space: nowrap; }
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.max-w-32 { max-width: 8rem; }
+.max-w-28 { max-width: 7rem; }
+.max-w-24 { max-width: 6rem; }
   </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -34,11 +45,14 @@
       <img src="https://i.ibb.co/ksSbDJKH/33fbdb6f-b2d9-44c4-963e-c559e83d6766.png" alt="logo" class="w-20 h-20 object-contain">
       <div>
         <h1 class="text-2xl font-bold">Controle de Saldos — Califórnia Transportes</h1>
-        <p class="text-sm text-gray-600">Painel de Saldos - Desenvolvido by Je4nGomes 💻</p>
+        <p class="text-sm text-gray-600">Painel de Saldos - Desenvolvido by Je4nGomes</p>
+        <p class="text-xs text-blue-600 mt-1">
+          <a href="cadastro.html" target="_blank" class="underline">Cadastrar Motoristas, Transportadoras e Envelopes</a>
+        </p>
       </div>
     </header>
 
-    <!-- CARDS & GRÁFICOS -->
+    <!-- CARDS -->
     <section class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
       <div class="bg-white p-4 rounded-lg shadow">
         <p class="text-sm text-gray-500">Saldo Total</p>
@@ -58,66 +72,85 @@
       </div>
     </section>
 
+    <!-- GRÁFICOS (MENOR E POR MÊS) -->
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-      <div class="bg-white p-4 rounded-lg shadow lg:col-span-2">
-        <canvas id="chart-saldo" height="200"></canvas> <!-- Aumentei a altura para melhor visualização -->
+      <div class="bg-white p-3 rounded-lg shadow lg:col-span-2">
+        <canvas id="chart-saldo" height="160"></canvas>
       </div>
-      <div class="bg-white p-4 rounded-lg shadow">
-        <canvas id="chart-status" height="240"></canvas>
+      <div class="bg-white p-3 rounded-lg shadow">
+        <canvas id="chart-status" height="160"></canvas>
       </div>
     </section>
 
-    <!-- FORM & FILTERS -->
+    <!-- FORMULÁRIO -->
     <section class="bg-white p-4 rounded-lg shadow mb-6">
       <form id="formulario" class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <input name="motorista" placeholder="Motorista" required class="border p-2 rounded" />
-        <input name="transportadora" placeholder="Transportadora" required class="border p-2 rounded" />
-        <input type="date" name="diaViagem" required class="border p-2 rounded" />
-        <input name="cte" placeholder="CTe" class="border p-2 rounded" />
-        <input name="nfe" placeholder="NFe" class="border p-2 rounded" />
-        <input name="status" placeholder="Status" class="border p-2 rounded" readonly />
-        <input name="codigoRastreio" placeholder="Código de Rastreio" class="border p-2 rounded" />
-        <input type="number" name="valorFrete" placeholder="Valor Frete" step="0.01" required class="border p-2 py-1 rounded" />
-        <input type="number" name="adiantamento" placeholder="Adiantamento" step="0.01" required class="border p-2 py-1 rounded" />
-        <button type="submit" class="bg-blue-600 text-white p-2 rounded col-span-2 md:col-span-1">Salvar (senha)</button>
+        <select name="motorista" required class="border p-2 rounded text-sm">
+          <option value="">Selecione Motorista</option>
+        </select>
+        <select name="transportadora" required class="border p-2 rounded text-sm">
+          <option value="">Selecione Transportadora</option>
+        </select>
+        <input type="date" name="diaViagem" required class="border p-2 rounded text-sm" />
+        <input name="cte" placeholder="CTe" class="border p-2 rounded text-sm" />
+        <input name="nfe" placeholder="NFe" class="border p-2 rounded text-sm" />
+        <select name="status" required class="border p-2 rounded text-sm">
+          <option value="">Selecione Status</option>
+          <option value="Na empresa, não enviado" style="background:#fca5a5; color:#991b1b;">Na empresa, não enviado</option>
+          <option value="Com motorista" style="background:#fdba74; color:#9a3412;">Com motorista</option>
+          <option value="Enviado para recebimento" style="background:#93c5fd; color:#1e40af;">Enviado para recebimento</option>
+          <option value="Pago" style="background:#86efac; color:#166534;">Pago</option>
+        </select>
+        <input name="codigoRastreio" placeholder="Código de Rastreio" class="border p-2 rounded text-sm" />
+        <select name="envelope" required class="border p-2 rounded text-sm">
+          <option value="">Selecione Envelope</option>
+        </select>
+        <input type="number" name="valorFrete" placeholder="Valor Frete" step="0.01" required class="border p-2 py-1 rounded text-sm" />
+        <input type="number" name="adiantamento" placeholder="Adiantamento" step="0.01" required class="border p-2 py-1 rounded text-sm" />
+        <button type="submit" class="bg-blue-600 text-white p-2 rounded col-span-2 md:col-span-1 text-sm hover:bg-blue-700">Salvar (senha)</button>
       </form>
 
+      <!-- FILTROS -->
       <div class="flex flex-wrap gap-3 mt-4">
-        <input id="filtroMotorista" placeholder="Filtrar Motorista" class="border p-2 rounded" />
-        <input id="filtroTransportadora" placeholder="Filtrar Transportadora" class="border p-2 rounded" />
-        <input id="filtroCte" placeholder="Filtrar CTe" class="border p-2 rounded" />
-        <input id="filtroData" type="date" class="border p-2 rounded" />
-        <button id="btnFiltrar" class="bg-indigo-600 text-white px-4 py-2 rounded">Aplicar Filtros</button>
-        <button id="btnExportar" class="bg-green-600 text-white px-4 py-2 rounded">Exportar .xlsx</button>
+        <input id="filtroMotorista" placeholder="Filtrar Motorista" class="border p-2 rounded text-sm" />
+        <input id="filtroTransportadora" placeholder="Filtrar Transportadora" class="border p-2 rounded text-sm" />
+        <input id="filtroCte" placeholder="Filtrar CTe" class="border p-2 rounded text-sm" />
+        <input id="filtroEnvelope" placeholder="Filtrar Envelope" class="border p-2 rounded text-sm" />
+        <input id="filtroData" type="date" class="border p-2 rounded text-sm" />
+        <button id="btnFiltrar" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">Aplicar Filtros</button>
+        <button id="btnExportar" class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">Exportar .xlsx</button>
       </div>
     </section>
 
-    <!-- TABELA -->
-    <section class="bg-white p-4 rounded-lg shadow mb-6 overflow-x-auto">
-      <h2 class="text-lg font-bold mb-3">Registros</h2>
-      <table class="min-w-full text-sm table-auto">
-        <thead>
-          <tr class="bg-gray-100">
-            <th class="border px-2 py-1"><input type="checkbox" id="selectAll"></th>
-            <th class="border px-2 py-1">Motorista</th>
-            <th class="border px-2 py-1">Transp.</th>
-            <th class="border px-2 py-1">Viagem</th>
-            <th class="border px-2 py-1">CTe</th>
-            <th class="border px-2 py-1">NFe</th>
-            <th class="border px-2 py-1">Status</th>
-            <th class="border px-2 py-1">Rastreio</th>
-            <th class="border px-2 py-1">Frete</th>
-            <th class="border px-2 py-1">Adiant.</th>
-            <th class="border px-2 py-1">Saldo</th>
-            <th class="border px-2 py-1">Data Receb.</th>
-            <th class="border px-2 py-1">Ações</th>
-          </tr>
-        </thead>
-        <tbody id="lista"></tbody>
-      </table>
-    </section>
+<!-- TABELA (COMPACTA E INTELIGENTE) -->
+<section class="bg-white p-4 rounded-lg shadow mb-6 overflow-x-auto">
+  <h2 class="text-lg font-bold mb-3">Registros</h2>
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-xs table-auto"> <!-- text-xs -->
+      <thead>
+        <tr class="bg-gray-100">
+          <th class="border px-1 py-1 whitespace-nowrap"><input type="checkbox" id="selectAll"></th>
+          <th class="border px-1 py-1 whitespace-nowrap max-w-32">Motorista</th> <!-- 32 chars max -->
+          <th class="border px-1 py-1 whitespace-nowrap max-w-28">Transp.</th>  <!-- 28 chars max -->
+          <th class="border px-1 py-1 whitespace-nowrap">Viagem</th>
+          <th class="border px-1 py-1 whitespace-nowrap">CTe</th>
+          <th class="border px-1 py-1 whitespace-nowrap">NFe</th>
+          <th class="border px-1 py-1 whitespace-nowrap max-w-24">Status</th>  <!-- 24 chars max -->
+          <th class="border px-1 py-1 whitespace-nowrap">Rastreio</th>
+          <th class="border px-1 py-1 whitespace-nowrap">Envelope</th>
+          <th class="border px-1 py-1 whitespace-nowrap text-right">Frete</th>
+          <th class="border px-1 py-1 whitespace-nowrap text-right">Adiant.</th>
+          <th class="border px-1 py-1 whitespace-nowrap text-right font-bold">Saldo</th>
+          <th class="border px-1 py-1 whitespace-nowrap">Data Receb.</th>
+          <th class="border px-1 py-1 acoes-col"></th>
+        </tr>
+      </thead>
+      <tbody id="lista"></tbody>
+    </table>
+  </div>
+</section>
 
-    <footer class="text-center text-gray-500 text-xs">Desenvolvido by Je4nGomes 💻</footer>
+    <footer class="text-center text-gray-500 text-xs">Desenvolvido by Je4nGomes</footer>
   </div>
 
   <!-- SCRIPTS -->
@@ -126,7 +159,6 @@
     import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
     import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
 
-    // === CONFIG DO FIREBASE (sua config enviada) ===
     const firebaseConfig = {
       apiKey: "AIzaSyDmryG-PKAyU1at8VL7NPRAZAetsoO3sdY",
       authDomain: "saldo-d8113.firebaseapp.com",
@@ -142,14 +174,15 @@
     const db = getDatabase(app);
     const storage = getStorage(app);
     const saldosRef = ref(db, 'saldos');
+    const cadastrosRef = ref(db, 'cadastros');
 
-    // === DOM elements ===
     const form = document.getElementById('formulario');
     const lista = document.getElementById('lista');
     const filtroMotorista = document.getElementById('filtroMotorista');
     const filtroTransportadora = document.getElementById('filtroTransportadora');
     const filtroData = document.getElementById('filtroData');
     const filtroCte = document.getElementById('filtroCte');
+    const filtroEnvelope = document.getElementById('filtroEnvelope');
     const btnExportar = document.getElementById('btnExportar');
     const btnFiltrar = document.getElementById('btnFiltrar');
 
@@ -158,190 +191,198 @@
     const CARD_PAGOS = document.getElementById('card-pagos');
     const CARD_TOTAL = document.getElementById('card-total');
 
-    // Chart placeholders
     let chartStatus = null;
     let chartSaldo = null;
-
-    // Variável para controle de autenticação da senha
     let senhaAutenticada = false;
-
-    // helpers
     const senhaMestra = '35280712';
+
     const formatarNumero = (n) => Number(n || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const formatarData = (isoOrDate) => {
-      if(!isoOrDate) return '-';
-      const d = new Date(isoOrDate);
-      if (isNaN(d)) return isoOrDate; // já no formato dd/mm/aaaa hh:mm talvez
+    const formatarData = (iso) => {
+      if (!iso) return '-';
+      const d = new Date(iso);
+      if (isNaN(d)) return iso;
       return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
     };
-    const diasDesde = (iso) => {
-      if(!iso) return '-';
-      const d = new Date(iso);
-      if (isNaN(d)) return '-';
-      const diff = Date.now() - d.getTime();
-      const dias = Math.floor(diff / (1000*60*60*24));
-      if (dias === 0) {
-        const horas = Math.floor(diff / (1000*60*60));
-        if (horas === 0) {
-          const minutos = Math.floor(diff / (1000*60));
-          return `${minutos}m`;
-        }
-        return `${horas}h`;
-      }
-      return `${dias}d`;
-    };
 
-    // dados locais
     let todosOsRegistros = [];
     let dadosExportacao = [];
+    let motoristas = [];
+    let transportadoras = [];
+    let envelopes = [];
 
-    // iniciar listeners
+    onValue(cadastrosRef, (snap) => {
+      const data = snap.val() || {};
+      motoristas = Object.values(data).filter(c => c.tipo === 'motorista').map(c => c.nome).sort();
+      transportadoras = Object.values(data).filter(c => c.tipo === 'transportadora').map(c => c.nome).sort();
+      envelopes = Object.values(data).filter(c => c.tipo === 'envelope').map(c => c.nome).sort();
+      popularSelects();
+    });
+
+    function popularSelects() {
+      const selectMotorista = form.querySelector('select[name="motorista"]');
+      selectMotorista.innerHTML = '<option value="">Selecione Motorista</option>' + motoristas.map(m => `<option value="${m}">${m}</option>`).join('');
+
+      const selectTransportadora = form.querySelector('select[name="transportadora"]');
+      selectTransportadora.innerHTML = '<option value="">Selecione Transportadora</option>' + transportadoras.map(t => `<option value="${t}">${t}</option>`).join('');
+
+      const selectEnvelope = form.querySelector('select[name="envelope"]');
+      selectEnvelope.innerHTML = '<option value="">Selecione Envelope</option>' + envelopes.map(e => `<option value="${e}">${e}</option>`).join('');
+    }
+
     onValue(saldosRef, (snap) => {
       const data = snap.val() || {};
       todosOsRegistros = Object.entries(data).map(([key, val]) => ({ key, ...val }));
-      aplicarFiltros(); // atualiza UI
+      aplicarFiltros();
       montarCardsCharts();
     });
 
-    // função para criar novo registro (com dataInsercao)
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const senha = prompt('Digite a senha:');
-      if (senha !== senhaMestra) { alert('Senha incorreta!'); return; }
+      const senha = prompt('Digite a senha para salvar:');
+      if (senha !== senhaMestra) return alert('Senha incorreta!');
+
       const dados = Object.fromEntries(new FormData(form).entries());
       dados.valorFrete = parseFloat(dados.valorFrete || 0);
       dados.adiantamento = parseFloat(dados.adiantamento || 0);
       dados.saldo = parseFloat((dados.valorFrete - dados.adiantamento).toFixed(2));
       dados.dataInsercao = new Date().toISOString();
-      // opcional: marcar dataEnvio se status for "Enviado para recebimento" (não automático)
+
+      if (dados.status === 'Enviado para recebimento') {
+        dados.dataEnvio = new Date().toISOString();
+      }
+
       await push(saldosRef, dados);
       form.reset();
+      alert('Registro salvo com sucesso!');
     });
 
-    // filtros
     btnFiltrar.addEventListener('click', aplicarFiltros);
 
     function aplicarFiltros() {
       lista.innerHTML = '';
       dadosExportacao = [];
-      const fM = (filtroMotorista.value || '').toLowerCase();
-      const fT = (filtroTransportadora.value || '').toLowerCase();
-      const fD = (filtroData.value || '');
-      const fC = (filtroCte.value || '').toLowerCase();
+
+      const fM = filtroMotorista.value.toLowerCase().trim();
+      const fT = filtroTransportadora.value.toLowerCase().trim();
+      const fD = filtroData.value;
+      const fC = filtroCte.value.toLowerCase().trim();
+      const fE = filtroEnvelope.value.toLowerCase().trim();
 
       let filtrados = todosOsRegistros.filter(v => {
         return (!fM || (v.motorista || '').toLowerCase().includes(fM)) &&
                (!fT || (v.transportadora || '').toLowerCase().includes(fT)) &&
-               (!fD || (v.diaViagem === fD)) &&
-               (!fC || ((v.cte || '').toLowerCase().includes(fC)));
+               (!fD || v.diaViagem === fD) &&
+               (!fC || (v.cte || '').toLowerCase().includes(fC)) &&
+               (!fE || (v.envelope || '').toLowerCase().includes(fE));
       });
 
-      // Ordenar: abertos primeiro
-      filtrados.sort((a,b) => (a.saldo > 0 ? 0 : 1) - (b.saldo > 0 ? 0 : 1));
-
+      filtrados.sort((a, b) => (a.saldo > 0 ? 0 : 1) - (b.saldo > 0 ? 0 : 1));
       filtrados.forEach(r => renderizarLinha(r));
-      montarCardsCharts();
     }
 
-    function renderizarLinha(val) {
-      const tr = document.createElement('tr');
-      const bgColor = {
-        'Na empresa, não enviado': 'bg-red-50',
-        'Com motorista': 'bg-orange-50',
-        'Enviado para recebimento': 'bg-blue-50',
-        'Pago': 'bg-green-50'
-      }[val.status] || '';
-      const statusColor = {
-        'Na empresa, não enviado': 'text-red-600',
-        'Com motorista': 'text-orange-600',
-        'Enviado para recebimento': 'text-blue-600',
-        'Pago': 'text-green-600'
-      }[val.status] || 'text-gray-700';
+function renderizarLinha(val) {
+  const tr = document.createElement('tr');
+  const bgColor = {
+    'Na empresa, não enviado': 'bg-red-50',
+    'Com motorista': 'bg-orange-50',
+    'Enviado para recebimento': 'bg-blue-50',
+    'Pago': 'bg-green-50'
+  }[val.status] || '';
+  const statusColor = {
+    'Na empresa, não enviado': 'text-red-600',
+    'Com motorista': 'text-orange-600',
+    'Enviado para recebimento': 'text-blue-600',
+    'Pago': 'text-green-600'
+  }[val.status] || 'text-gray-700';
 
-      tr.className = bgColor;
-      // calcular tempo desde envio (se dataEnvio existir)
-      const desdeInsercao = diasDesde(val.dataInsercao);
-      const desdeEnvio = val.dataEnvio ? diasDesde(val.dataEnvio) : '-';
+  // Função para truncar texto
+  const truncar = (texto, max) => {
+    if (!texto) return '-';
+    return texto.length > max ? texto.substring(0, max - 3) + '...' : texto;
+  };
 
-      tr.innerHTML = `
-        <td class="border px-2 py-1"><input type="checkbox" class="rowCheck" data-saldo="${val.saldo || 0}" data-key="${val.key}"></td>
-        <td class="border px-2 py-1">${val.motorista || '-'}</td>
-        <td class="border px-2 py-1">${val.transportadora || '-'}</td>
-        <td class="border px-2 py-1">${val.diaViagem ? ( (d=> `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`)(new Date(val.diaViagem)) ) : '-'}</td>
-        <td class="border px-2 py-1">${val.cte || '-'}</td>
-        <td class="border px-2 py-1">${val.nfe || '-'}</td>
-        <td class="border px-2 py-1 ${statusColor}">${val.status || '-'}</td>
-        <td class="border px-2 py-1">${val.codigoRastreio || '-'}</td>
-        <td class="border px-2 py-1">R$ ${formatarNumero(val.valorFrete)}</td>
-        <td class="border px-2 py-1">R$ ${formatarNumero(val.adiantamento)}</td>
-        <td class="border px-2 py-1">R$ ${formatarNumero(val.saldo)}</td>
-        <td class="border px-2 py-1">${val.dataRecebimento ? val.dataRecebimento : '-'}</td>
-        <td class="border px-2 py-1">
-          <div class="relative inline-block">
-            <button data-key="${val.key}" class="actions-btn bg-gray-500 text-white px-2 py-1 rounded text-xs">Ações</button>
-            <div id="actions-menu-${val.key}" class="actions-menu hidden absolute right-0 mt-2 bg-white border shadow-lg z-50">
-              ${val.pdfUrl 
-                ? `<a href="${val.pdfUrl}" target="_blank" class="text-blue-600 hover:bg-gray-50">Ver PDF</a>`
-                : `<button data-key="${val.key}" class="upload-btn text-blue-600 hover:bg-gray-50">Anexar PDF</button>`
-              }
-              <button data-key="${val.key}" class="delete-btn text-red-600 hover:bg-gray-50">Excluir</button>
-              ${val.saldo > 0 ? `<button data-key="${val.key}" class="mark-recebido-btn text-green-600 hover:bg-gray-50">Marcar como Recebido</button>` : ''}
-              <button data-key="${val.key}" class="edit-btn text-yellow-700 hover:bg-gray-50">Editar</button>
-              <button data-key="${val.key}" class="status-btn text-purple-600 hover:bg-gray-50">Alterar Status</button>
-            </div>
-          </div>
-        </td>
-      `;
-      lista.appendChild(tr);
+  const motorista = truncar(val.motorista, 15);
+  const transportadora = truncar(val.transportadora, 12);
+  const statusAbrev = val.status === 'Na empresa, não enviado' ? 'Na empresa' :
+                     val.status === 'Com motorista' ? 'Com mot.' :
+                     val.status === 'Enviado para recebimento' ? 'Enviado' :
+                     val.status === 'Pago' ? 'Pago' : val.status;
 
-      // preparar dados para exportação
-      dadosExportacao.push({
-        Motorista: val.motorista || '',
-        Transportadora: val.transportadora || '',
-        DiaViagem: val.diaViagem || '',
-        CTe: val.cte || '',
-        NFe: val.nfe || '',
-        Status: val.status || '',
-        CodigoRastreio: val.codigoRastreio || '',
-        Frete: formatarNumero(val.valorFrete),
-        Adiantamento: formatarNumero(val.adiantamento),
-        Saldo: formatarNumero(val.saldo),
-        DataRecebimento: val.dataRecebimento || '',
-        DataInsercao: val.dataInsercao || '',
-        PDF: val.pdfUrl || ''
-      });
-    }
+  tr.className = bgColor;
+  tr.innerHTML = `
+    <td class="border px-1 py-1 text-center"><input type="checkbox" class="rowCheck" data-saldo="${val.saldo || 0}" data-key="${val.key}"></td>
+    <td class="border px-1 py-1 whitespace-nowrap max-w-32 truncate" title="${val.motorista || ''}">${motorista}</td>
+    <td class="border px-1 py-1 whitespace-nowrap max-w-28 truncate" title="${val.transportadora || ''}">${transportadora}</td>
+    <td class="border px-1 py-1 whitespace-nowrap">${val.diaViagem ? new Date(val.diaViagem).toLocaleDateString('pt-BR') : '-'}</td>
+    <td class="border px-1 py-1 whitespace-nowrap">${val.cte || '-'}</td>
+    <td class="border px-1 py-1 whitespace-nowrap">${val.nfe || '-'}</td>
+    <td class="border px-1 py-1 whitespace-nowrap max-w-24 ${statusColor} font-medium" title="${val.status || ''}">${statusAbrev}</td>
+    <td class="border px-1 py-1 whitespace-nowrap">${val.codigoRastreio || '-'}</td>
+    <td class="border px-1 py-1 whitespace-nowrap">${val.envelope || '-'}</td>
+    <td class="border px-1 py-1 whitespace-nowrap text-right">R$ ${formatarNumero(val.valorFrete)}</td>
+    <td class="border px-1 py-1 whitespace-nowrap text-right">R$ ${formatarNumero(val.adiantamento)}</td>
+    <td class="border px-1 py-1 whitespace-nowrap text-right font-bold">R$ ${formatarNumero(val.saldo)}</td>
+    <td class="border px-1 py-1 whitespace-nowrap">${val.dataRecebimento ? formatarData(val.dataRecebimento) : '-'}</td>
+    <td class="border px-1 py-1 acoes-col align-middle">
+      <div class="relative">
+        <button data-key="${val.key}" class="actions-btn bg-gray-600 hover:bg-gray-700 text-white px-2 py-0.5 rounded text-xs">Ações</button>
+        <div id="actions-menu-${val.key}" class="actions-menu hidden absolute bg-white border rounded shadow-lg z-50 top-full right-0 mt-1">
+          ${val.pdfUrl 
+            ? `<a href="${val.pdfUrl}" target="_blank" class="text-blue-600 hover:bg-gray-100 block px-3 py-1 text-xs">Ver PDF</a>`
+            : `<button data-key="${val.key}" class="upload-btn text-blue-600 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Anexar PDF</button>`
+          }
+          <button data-key="${val.key}" class="delete-btn text-red-600 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Excluir</button>
+          ${val.saldo > 0 ? `<button data-key="${val.key}" class="mark-recebido-btn text-green-600 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Marcar como Recebido</button>` : ''}
+          <button data-key="${val.key}" class="edit-btn text-yellow-700 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Editar</button>
+        </div>
+      </div>
+    </td>
+  `;
+  lista.appendChild(tr);
 
-    // Export XLSX
+  dadosExportacao.push({
+    Motorista: val.motorista || '',
+    Transportadora: val.transportadora || '',
+    DiaViagem: val.diaViagem || '',
+    CTe: val.cte || '',
+    NFe: val.nfe || '',
+    Status: val.status || '',
+    CodigoRastreio: val.codigoRastreio || '',
+    Envelope: val.envelope || '',
+    Frete: formatarNumero(val.valorFrete),
+    Adiantamento: formatarNumero(val.adiantamento),
+    Saldo: formatarNumero(val.saldo),
+    DataRecebimento: val.dataRecebimento || '',
+    DataInsercao: val.dataInsercao || '',
+    PDF: val.pdfUrl || ''
+  });
+}
+
     btnExportar.addEventListener('click', () => {
       const ws = XLSX.utils.json_to_sheet(dadosExportacao);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Saldos');
-      XLSX.writeFile(wb, 'saldos.xlsx');
+      XLSX.writeFile(wb, `saldos_${new Date().toISOString().slice(0,10)}.xlsx`);
     });
 
-    // ESCUTAR CLIQUES (menu ações)
     document.addEventListener('click', async (e) => {
       const key = e.target.getAttribute('data-key');
-      // abrir menu ações (proteção por senha apenas na primeira vez)
+      if (!key) return;
+
       if (e.target.classList.contains('actions-btn')) {
         if (!senhaAutenticada) {
-          const senha = prompt('Digite a senha:');
-          if (senha !== senhaMestra) { alert('Senha incorreta!'); return; }
+          const senha = prompt('Digite a senha para ações:');
+          if (senha !== senhaMestra) return alert('Senha incorreta!');
           senhaAutenticada = true;
         }
         const menu = document.getElementById(`actions-menu-${key}`);
-        if (menu) menu.classList.toggle('hidden');
+        menu.classList.toggle('hidden');
       }
 
-      // upload PDF
       if (e.target.classList.contains('upload-btn')) {
         const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'application/pdf';
-        input.style.display = 'none';
-        document.body.appendChild(input);
-        input.click();
+        input.type = 'file'; input.accept = 'application/pdf'; input.style.display = 'none';
+        document.body.appendChild(input); input.click();
         input.addEventListener('change', async () => {
           const file = input.files[0];
           if (file) {
@@ -355,211 +396,78 @@
         });
       }
 
-      // excluir
-      if (e.target.classList.contains('delete-btn')) {
-        if (!confirm('Tem certeza que deseja excluir este registro?')) return;
+      if (e.target.classList.contains('delete-btn') && confirm('Excluir este registro?')) {
         await remove(ref(db, `saldos/${key}`));
-        alert('Registro excluído.');
       }
 
-      // marcar como recebido
       if (e.target.classList.contains('mark-recebido-btn')) {
-        let dataDigitada = prompt('Digite a data de recebimento (ex: 26/06/2025 16:27) ou deixe em branco para usar a atual:');
-        if (dataDigitada === null) return;
-        if (!dataDigitada.trim()) {
-          const d = new Date();
-          dataDigitada = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-        }
-        await update(ref(db, `saldos/${key}`), { saldo: 0, dataRecebimento: dataDigitada });
-        alert('Marcado como recebido.');
+        let data = prompt('Data de recebimento (ou deixe em branco para agora):');
+        if (data === null) return;
+        if (!data.trim()) data = new Date().toLocaleString('pt-BR');
+        await update(ref(db, `saldos/${key}`), { saldo: 0, dataRecebimento: data, status: 'Pago' });
       }
 
-      // editar (abre modal) => exige senha ao salvar
       if (e.target.classList.contains('edit-btn')) {
-        const registro = todosOsRegistros.find(r => r.key === key);
-        if (!registro) return alert('Registro não encontrado');
+        const reg = todosOsRegistros.find(r => r.key === key);
+        if (!reg) return;
+
         const modal = document.createElement('div');
         modal.className = 'fixed inset-0 modal-bg flex items-center justify-center z-50';
         modal.innerHTML = `
-          <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+          <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
             <h3 class="text-xl font-bold mb-4">Editar Registro</h3>
-            <form id="form-edit-${key}" class="grid grid-cols-2 gap-3">
-              <input name="motorista" value="${registro.motorista || ''}" class="border p-2 rounded" required />
-              <input name="transportadora" value="${registro.transportadora || ''}" class="border p-2 rounded" required />
-              <input type="date" name="diaViagem" value="${registro.diaViagem || ''}" class="border p-2 rounded" required />
-              <input name="cte" value="${registro.cte || ''}" class="border p-2 rounded" />
-              <input name="nfe" value="${registro.nfe || ''}" class="border p-2 rounded" />
-              <input name="status" value="${registro.status || ''}" class="border p-2 rounded" readonly />
-              <input name="codigoRastreio" value="${registro.codigoRastreio || ''}" class="border p-2 rounded" />
-              <input type="number" name="valorFrete" value="${registro.valorFrete || 0}" step="0.01" class="border p-2 rounded" required />
-              <input type="number" name="adiantamento" value="${registro.adiantamento || 0}" step="0.01" class="border p-2 rounded" required />
+            <form id="form-edit-${key}" class="grid grid-cols-2 gap-3 text-sm">
+              <select name="motorista" class="border p-2 rounded" required>
+                <option value="">Selecione Motorista</option>
+                ${motoristas.map(m => `<option value="${m}" ${reg.motorista===m?'selected':''}>${m}</option>`).join('')}
+              </select>
+              <select name="transportadora" class="border p-2 rounded" required>
+                <option value="">Selecione Transportadora</option>
+                ${transportadoras.map(t => `<option value="${t}" ${reg.transportadora===t?'selected':''}>${t}</option>`).join('')}
+              </select>
+              <input type="date" name="diaViagem" value="${reg.diaViagem||''}" class="border p-2 rounded" required />
+              <input name="cte" value="${reg.cte||''}" class="border p-2 rounded" />
+              <input name="nfe" value="${reg.nfe||''}" class="border p-2 rounded" />
+              <select name="status" class="border p-2 rounded" required>
+                <option value="Na empresa, não enviado" ${reg.status==='Na empresa, não enviado'?'selected':''} style="background:#fca5a5;color:#991b1b;">Na empresa, não enviado</option>
+                <option value="Com motorista" ${reg.status==='Com motorista'?'selected':''} style="background:#fdba74;color:#9a3412;">Com motorista</option>
+                <option value="Enviado para recebimento" ${reg.status==='Enviado para recebimento'?'selected':''} style="background:#93c5fd;color:#1e40af;">Enviado para recebimento</option>
+                <option value="Pago" ${reg.status==='Pago'?'selected':''} style="background:#86efac;color:#166534;">Pago</option>
+              </select>
+              <input name="codigoRastreio" value="${reg.codigoRastreio||''}" class="border p-2 rounded" />
+              <select name="envelope" class="border p-2 rounded">
+                <option value="">Selecione Envelope</option>
+                ${envelopes.map(e => `<option value="${e}" ${reg.envelope===e?'selected':''}>${e}</option>`).join('')}
+              </select>
+              <input type="number" name="valorFrete" value="${reg.valorFrete||0}" step="0.01" class="border p-2 rounded" required />
+              <input type="number" name="adiantamento" value="${reg.adiantamento||0}" step="0.01" class="border p-2 rounded" required />
               <div class="col-span-2 flex gap-2">
                 <button type="submit" class="bg-blue-600 text-white p-2 rounded flex-1">Salvar</button>
-                <button type="button" id="cancel-edit-${key}" class="bg-gray-400 text-white p-2 rounded flex-1">Cancelar</button>
+                <button type="button" id="cancel-${key}" class="bg-gray-400 text-white p-2 rounded flex-1">Cancelar</button>
               </div>
             </form>
           </div>
         `;
         document.body.appendChild(modal);
 
-        // Adicionar funcionalidade de popup de status no formulário de edição
-        const editStatusInput = modal.querySelector('input[name="status"]');
-        const editStatusPopup = document.createElement('div');
-        editStatusPopup.id = `edit-status-popup-${key}`;
-        editStatusPopup.className = 'hidden fixed inset-0 modal-bg flex items-center justify-center z-50';
-        editStatusPopup.innerHTML = `
-          <div class="bg-white p-6 rounded shadow-lg w-96">
-            <h2 class="text-xl font-bold mb-4">Selecionar Status</h2>
-            <div id="edit-status-options-${key}" class="grid gap-4">
-              <button data-status="Na empresa, não enviado" class="bg-red-500 text-white p-2 rounded w-full">Na empresa, não enviado</button>
-              <button data-status="Com motorista" class="bg-orange-500 text-white p-2 rounded w-full">Com motorista</button>
-              <button data-status="Enviado para recebimento" class="bg-blue-500 text-white p-2 rounded w-full">Enviado para recebimento</button>
-              <button data-status="Pago" class="bg-green-500 text-white p-2 rounded w-full">Pago</button>
-            </div>
-            <button id="edit-close-status-popup-${key}" class="mt-4 bg-gray-600 text-white p-2 rounded w-full">Fechar</button>
-          </div>
-        `;
-        document.body.appendChild(editStatusPopup);
+        document.getElementById(`cancel-${key}`).onclick = () => modal.remove();
 
-        editStatusInput.addEventListener('click', () => {
-          editStatusPopup.classList.remove('hidden');
-        });
-
-        const editStatusOptions = document.getElementById(`edit-status-options-${key}`);
-        editStatusOptions.addEventListener('click', (e) => {
-          if (e.target.tagName === 'BUTTON' && e.target.getAttribute('data-status')) {
-            editStatusInput.value = e.target.getAttribute('data-status');
-            editStatusPopup.classList.add('hidden');
-          }
-        });
-
-        const editCloseStatusPopup = document.getElementById(`edit-close-status-popup-${key}`);
-        editCloseStatusPopup.addEventListener('click', () => {
-          editStatusPopup.classList.add('hidden');
-        });
-
-        document.addEventListener('click', (e) => {
-          if (!editStatusPopup.contains(e.target) && e.target !== editStatusInput) {
-            editStatusPopup.classList.add('hidden');
-          }
-        });
-
-        const editForm = document.getElementById(`form-edit-${key}`);
-        const cancelBtn = document.getElementById(`cancel-edit-${key}`);
-
-        cancelBtn.onclick = () => {
-          modal.remove();
-          editStatusPopup.remove();
-        };
-
-        editForm.addEventListener('submit', async (ev) => {
+        document.getElementById(`form-edit-${key}`).addEventListener('submit', async (ev) => {
           ev.preventDefault();
-          const dados = Object.fromEntries(new FormData(editForm).entries());
+          const dados = Object.fromEntries(new FormData(ev.target).entries());
           dados.valorFrete = parseFloat(dados.valorFrete || 0);
           dados.adiantamento = parseFloat(dados.adiantamento || 0);
           dados.saldo = parseFloat((dados.valorFrete - dados.adiantamento).toFixed(2));
+          if (dados.status === 'Enviado para recebimento') dados.dataEnvio = new Date().toISOString();
           await update(ref(db, `saldos/${key}`), dados);
-          alert('Registro atualizado!');
           modal.remove();
-          editStatusPopup.remove();
         });
       }
-
-      // alterar status (abrir modal com opções)
-      if (e.target.classList.contains('status-btn')) {
-        const registro = todosOsRegistros.find(r => r.key === key);
-        if (!registro) return;
-        const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 modal-bg flex items-center justify-center z-50';
-        modal.innerHTML = `
-          <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
-            <h3 class="text-xl font-bold mb-4">Alterar Status</h3>
-            <div class="grid gap-2">
-              <button data-status="Na empresa, não enviado" class="btn-status bg-red-500 text-white p-2 rounded">Na empresa, não enviado</button>
-              <button data-status="Com motorista" class="btn-status bg-orange-500 text-white p-2 rounded">Com motorista</button>
-              <button data-status="Enviado para recebimento" class="btn-status bg-blue-500 text-white p-2 rounded">Enviado para recebimento</button>
-              <button data-status="Pago" class="btn-status bg-green-500 text-white p-2 rounded">Pago</button>
-            </div>
-            <button id="close-status-${key}" class="bg-gray-400 text-white p-2 rounded w-full">Fechar</button>
-          </div>
-        `;
-        document.body.appendChild(modal);
-
-        modal.querySelectorAll('.btn-status').forEach(btn => {
-          btn.addEventListener('click', async (ev) => {
-            const novoStatus = ev.currentTarget.getAttribute('data-status');
-            const updates = { status: novoStatus };
-            // se marcar "Enviado para recebimento", defina dataEnvio
-            if (novoStatus === 'Enviado para recebimento') updates.dataEnvio = new Date().toISOString();
-            await update(ref(db, `saldos/${key}`), updates);
-            alert('Status alterado!');
-            modal.remove();
-          });
-        });
-
-        document.getElementById(`close-status-${key}`).onclick = () => modal.remove();
-      }
     });
 
-    // fechar menus ao clicar fora
-    document.addEventListener('click', (e) => {
-      document.querySelectorAll('[id^="actions-menu-"]').forEach(menu => {
-        if (!menu.contains(e.target) && !e.target.classList.contains('actions-btn')) {
-          menu.classList.add('hidden');
-        }
-      });
-    });
-
-    // Adicionar evento para abrir a janela de seleção de status no formulário
-    document.addEventListener('DOMContentLoaded', () => {
-      const statusInput = document.querySelector('input[name="status"]');
-      statusInput.readOnly = true; // Tornar o campo readonly
-      const statusPopup = document.createElement('div');
-      statusPopup.id = 'status-popup';
-      statusPopup.className = 'hidden fixed inset-0 modal-bg flex items-center justify-center z-50';
-      statusPopup.innerHTML = `
-        <div class="bg-white p-6 rounded shadow-lg w-96">
-          <h2 class="text-xl font-bold mb-4">Selecionar Status</h2>
-          <div id="status-options" class="grid gap-4">
-            <button data-status="Na empresa, não enviado" class="bg-red-500 text-white p-2 rounded w-full">Na empresa, não enviado</button>
-            <button data-status="Com motorista" class="bg-orange-500 text-white p-2 rounded w-full">Com motorista</button>
-            <button data-status="Enviado para recebimento" class="bg-blue-500 text-white p-2 rounded w-full">Enviado para recebimento</button>
-            <button data-status="Pago" class="bg-green-500 text-white p-2 rounded w-full">Pago</button>
-          </div>
-          <button id="close-status-popup" class="mt-4 bg-gray-600 text-white p-2 rounded w-full">Fechar</button>
-        </div>
-      `;
-      document.body.appendChild(statusPopup);
-
-      statusInput.addEventListener('click', () => {
-        statusPopup.classList.remove('hidden');
-      });
-
-      const statusOptions = document.getElementById('status-options');
-      statusOptions.addEventListener('click', (e) => {
-        if (e.target.tagName === 'BUTTON' && e.target.getAttribute('data-status')) {
-          statusInput.value = e.target.getAttribute('data-status');
-          statusPopup.classList.add('hidden');
-        }
-      });
-
-      const closeStatusPopup = document.getElementById('close-status-popup');
-      closeStatusPopup.addEventListener('click', () => {
-        statusPopup.classList.add('hidden');
-      });
-
-      // Fechar popup ao clicar fora
-      document.addEventListener('click', (e) => {
-        if (!statusPopup.contains(e.target) && e.target !== statusInput) {
-          statusPopup.classList.add('hidden');
-        }
-      });
-    });
-
-    // CARDS e CHARTS
+    // === GRÁFICOS POR MÊS ===
     function montarCardsCharts() {
-      const totalReg = todosOsRegistros.length;
-      CARD_TOTAL.textContent = totalReg;
+      CARD_TOTAL.textContent = todosOsRegistros.length;
 
       const totais = todosOsRegistros.reduce((acc, r) => {
         acc.saldoTotal += Number(r.saldo || 0);
@@ -572,142 +480,84 @@
       CARD_ABERTO.textContent = totais.aberto;
       CARD_PAGOS.textContent = totais.pago;
 
-      // Preparar dados para o gráfico de linhas (saldo acumulado por mês)
-      const saldoPorMes = {};
-      const statusCount = {}; // Inicializado aqui
+      // GRÁFICO DE STATUS
+      const statusCount = {};
       todosOsRegistros.forEach(r => {
-        const data = r.diaViagem ? new Date(r.diaViagem) : (r.dataInsercao ? new Date(r.dataInsercao) : null);
-        if (data && !isNaN(data)) {
-          const mesAno = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
-          saldoPorMes[mesAno] = (saldoPorMes[mesAno] || 0) + Number(r.saldo || 0);
-        }
         const s = r.status || 'Outro';
         statusCount[s] = (statusCount[s] || 0) + 1;
       });
 
-      // Calcular soma acumulada
-      const labels = Object.keys(saldoPorMes).sort();
-      let somaAcumulada = 0;
-      const valoresAcumulados = labels.map(mes => {
-        somaAcumulada += saldoPorMes[mes];
-        return somaAcumulada;
-      });
-
-      // Chart - STATUS (pizza)
       const ctxStatus = document.getElementById('chart-status').getContext('2d');
       if (chartStatus) chartStatus.destroy();
       chartStatus = new Chart(ctxStatus, {
         type: 'pie',
         data: {
           labels: Object.keys(statusCount),
-          datasets: [{ data: Object.values(statusCount) }]
+          datasets: [{
+            data: Object.values(statusCount),
+            backgroundColor: ['#ef4444', '#f97316', '#3b82f6', '#22c55e']
+          }]
         },
         options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
       });
 
-      // Chart - SALDO (linhas com soma acumulada)
+      // GRÁFICO DE SALDO POR MÊS (ACUMULADO)
       const ctxSaldo = document.getElementById('chart-saldo').getContext('2d');
       if (chartSaldo) chartSaldo.destroy();
+
+      const porMes = {};
+      todosOsRegistros.forEach(r => {
+        if (!r.diaViagem) return;
+        const mesAno = r.diaViagem.substring(0, 7); // YYYY-MM
+        porMes[mesAno] = (porMes[mesAno] || 0) + Number(r.saldo || 0);
+      });
+
+      const mesesOrdenados = Object.keys(porMes).sort();
+      const labels = mesesOrdenados.map(m => {
+        const [ano, mes] = m.split('-');
+        const data = new Date(ano, mes - 1);
+        return data.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+      });
+      const valores = mesesOrdenados.map(m => porMes[m]);
+
       chartSaldo = new Chart(ctxSaldo, {
-        type: 'line',
+        type: 'bar',
         data: {
-          labels: labels.map(mes => `${mes.split('-')[1]}/${mes.split('-')[0].slice(-2)}`), // Formato MM/YY
+          labels: labels,
           datasets: [{
-            label: 'Soma Acumulada de Saldos (R$)',
-            data: valoresAcumulados,
-            borderColor: '#3b82f6',
-            backgroundColor: 'rgba(59, 130, 246, 0.2)',
-            fill: true,
-            tension: 0.1
+            label: 'Saldo em Aberto',
+            data: valores,
+            backgroundColor: '#dc2626',
+            borderColor: '#b91c1c',
+            borderWidth: 1
           }]
         },
         options: {
           responsive: true,
-          plugins: { legend: { display: true } },
+          plugins: { legend: { display: false } },
           scales: {
             y: { beginAtZero: true }
           }
         }
       });
-
-      // ranking (top por saldo aberto)
-      const rankingDiv = document.getElementById('ranking');
-      const rankingMap = {};
-      todosOsRegistros.forEach(r => {
-        if (!rankingMap[r.motorista]) rankingMap[r.motorista] = 0;
-        rankingMap[r.motorista] += Number(r.saldo || 0);
-      });
-      const rankingArr = Object.entries(rankingMap).map(([m, s]) => ({ motorista: m, saldo: s })).sort((a, b) => b.saldo - a.saldo);
-      rankingDiv.innerHTML = rankingArr.slice(0, 10).map(r => `<div class="flex justify-between"><span>${r.motorista}</span><span>R$ ${formatarNumero(r.saldo)}</span></div>`).join('');
-      
-      // calendário simples (apenas quantidade por dia)
-      const cal = document.getElementById('calendario');
-      const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-      cal.innerHTML = '';
-      const countsByDay = [0, 0, 0, 0, 0, 0, 0];
-      todosOsRegistros.forEach(r => {
-        if (r.dataRecebimento) {
-          const dr = (function parseDateStr(s) {
-            if (!s) return null;
-            if (s.includes('T')) return new Date(s);
-            const m = s.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-            if (!m) return null;
-            return new Date(`${m[3]}-${m[2]}-${m[1]}T00:00:00`);
-          })(r.dataRecebimento);
-          if (dr) countsByDay[dr.getDay()]++;
-        }
-      });
-      days.forEach((d, i) => {
-        const el = document.createElement('div');
-        el.className = 'p-2 border rounded bg-gray-50';
-        el.innerHTML = `<strong>${d}</strong><div class="text-xs mt-1">${countsByDay[i]} recebidos</div>`;
-        cal.appendChild(el);
-      });
     }
 
-    // Adicionar listener para checkboxes
+    // CHECKBOXES
     lista.addEventListener('change', (e) => {
-        if (e.target.classList.contains('rowCheck')) {
-            const checkboxes = document.querySelectorAll('.rowCheck');
-            let totalSelecionado = 0;
-            checkboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    totalSelecionado += parseFloat(checkbox.getAttribute('data-saldo') || 0);
-                }
-            });
-            CARD_SALDO.textContent = `R$ ${formatarNumero(totalSelecionado)}`;
-        }
+      if (e.target.classList.contains('rowCheck')) {
+        let total = 0;
+        document.querySelectorAll('.rowCheck:checked').forEach(c => total += parseFloat(c.dataset.saldo || 0));
+        CARD_SALDO.textContent = `R$ ${formatarNumero(total)}`;
+      }
     });
 
-    // Adicionar listener para selecionar/desmarcar todos
     document.getElementById('selectAll').addEventListener('change', (e) => {
-        const checkboxes = document.querySelectorAll('.rowCheck');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = e.target.checked;
-        });
-        const totalSelecionado = e.target.checked ? todosOsRegistros.reduce((acc, r) => acc + Number(r.saldo || 0), 0) : 0;
-        CARD_SALDO.textContent = `R$ ${formatarNumero(totalSelecionado)}`;
+      document.querySelectorAll('.rowCheck').forEach(c => c.checked = e.target.checked);
+      const total = e.target.checked ? todosOsRegistros.reduce((a,r) => a + Number(r.saldo||0), 0) : 0;
+      CARD_SALDO.textContent = `R$ ${formatarNumero(total)}`;
     });
 
-    // Atualizar total ao aplicar filtros
-    btnFiltrar.addEventListener('click', () => {
-        setTimeout(() => {
-            const checkboxes = document.querySelectorAll('.rowCheck');
-            let totalSelecionado = 0;
-            checkboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    totalSelecionado += parseFloat(checkbox.getAttribute('data-saldo') || 0);
-                }
-            });
-            CARD_SALDO.textContent = `R$ ${formatarNumero(totalSelecionado)}`;
-        }, 0);
-    });
-
-    // inicial: montar vazios
     montarCardsCharts();
-
-    // export/import de dados (dadosExportacao é atualizado em render)
-    // (já configurado no botão)
   </script>
 </body>
 </html>
