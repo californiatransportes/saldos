@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cadastro de Motoristas, Transportadoras e Envelopes</title>
+  <link rel="icon" href="https://californiatransportes.github.io/saldos/controle/california.ico" type="image/x-icon">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+  <div class="max-w-4xl mx-auto p-4">
+    <header class="flex items-center gap-4 mb-6">
+      <img src="https://i.ibb.co/ksSbDJKH/33fbdb6f-b2d9-44c4-963e-c559e83d6766.png" alt="logo" class="w-16 h-16 object-contain">
+      <div>
+        <h1 class="text-2xl font-bold">Cadastro de Motoristas, Transportadoras e Envelopes</h1>
+        <p class="text-sm text-gray-600">Gerencie os cadastros</p>
+      </div>
+    </header>
+
+    <section class="bg-white p-6 rounded-lg shadow shadow-lg mb-6">
+      <form id="formCadastro" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Tipo</label>
+          <select name="tipo" required class="border p-2 rounded w-full">
+            <option value="">Selecione...</option>
+            <option value="motorista">Motorista</option>
+            <option value="transportadora">Transportadora</option>
+            <option value="envelope">Envelope</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Nome/Código</label>
+          <input name="nome" placeholder="Ex: João Silva ou ENV-001" required class="border p-2 rounded w-full" />
+        </div>
+        <button type="submit" class="bg-blue-600 text-white p-2 rounded md:col-span-2 hover:bg-blue-700">Cadastrar</button>
+      </form>
+    </section>
+
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h2 class="text-lg font-bold mb-3">Motoristas</h2>
+        <ul id="listaMotoristas" class="space-y-2 text-sm max-h-64 overflow-y-auto"></ul>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h2 class="text-lg font-bold mb-3">Transportadoras</h2>
+        <ul id="listaTransportadoras" class="space-y-2 text-sm max-h-64 overflow-y-auto"></ul>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h2 class="text-lg font-bold mb-3">Envelopes</h2>
+        <ul id="listaEnvelopes" class="space-y-2 text-sm max-h-64 overflow-y-auto"></ul>
+      </div>
+    </section>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDmryG-PKAyU1at8VL7NPRAZAetsoO3sdY",
+      authDomain: "saldo-d8112.firebaseapp.com",
+      databaseURL: "https://saldo-d8113-default-rtdb.firebaseio.com",
+      projectId: "saldo-d8113",
+      storageBucket: "saldo-d8113.appspot.com",
+      messagingSenderId: "21759024447",
+      appId: "1:21759024447:web:55ecbcceb69d9c48f5478a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const cadastrosRef = ref(db, 'cadastros');
+
+    const form = document.getElementById('formCadastro');
+    const listaMotoristas = document.getElementById('listaMotoristas');
+    const listaTransportadoras = document.getElementById('listaTransportadoras');
+    const listaEnvelopes = document.getElementById('listaEnvelopes');
+
+    onValue(cadastrosRef, (snap) => {
+      const data = snap.val() || {};
+      const motoristas = [], transportadoras = [], envelopes = [];
+
+      Object.entries(data).forEach(([key, val]) => {
+        const item = `<li class="flex justify-between items-center p-2 border-b last:border-b-0">
+          <span>${val.nome}</span>
+          <button data-key="${key}" class="text-red-600 text-xs hover:text-red-800 delete-btn">Excluir</button>
+        </li>`;
+        if (val.tipo === 'motorista') motoristas.push(item);
+        else if (val.tipo === 'transportadora') transportadoras.push(item);
+        else if (val.tipo === 'envelope') envelopes.push(item);
+      });
+
+      listaMotoristas.innerHTML = motoristas.length ? motoristas.join('') : '<li class="text-gray-500 p-2">Nenhum motorista cadastrado</li>';
+      listaTransportadoras.innerHTML = transportadoras.length ? transportadoras.join('') : '<li class="text-gray-500 p-2">Nenhuma transportadora cadastrada</li>';
+      listaEnvelopes.innerHTML = envelopes.length ? envelopes.join('') : '<li class="text-gray-500 p-2">Nenhum envelope cadastrado</li>';
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const dados = Object.fromEntries(new FormData(form).entries());
+      if (!dados.tipo || !dados.nome) {
+        alert('Preencha todos os campos!');
+        return;
+      }
+      await push(cadastrosRef, dados);
+      form.reset();
+      alert('Cadastrado com sucesso!');
+    });
+
+    document.addEventListener('click', async (e) => {
+      if (e.target.classList.contains('delete-btn')) {
+        const key = e.target.getAttribute('data-key');
+        if (confirm('Excluir este cadastro?')) {
+          await remove(ref(db, `cadastros/${key}`));
+          alert('Excluído com sucesso!');
+        }
+      }
+    });
+  </script>
+</body>
+</html>
