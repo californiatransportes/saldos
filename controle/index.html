@@ -148,7 +148,7 @@
       </div>
     </section>
 
-    <!-- MODAL DE IMPORTAÇÃO (FORA DO FORM!) -->
+    <!-- MODAL DE IMPORTAÇÃO -->
     <div id="modalImportar" class="fixed inset-0 modal-bg hidden flex items-center justify-center z-50">
       <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl max-h-screen overflow-y-auto">
         <h3 class="text-xl font-bold mb-4">Importar CSV de Saldos</h3>
@@ -527,7 +527,7 @@
 
     montarCardsCharts();
 
-    // === IMPORTAÇÃO DE CSV (CORRIGIDA E FUNCIONAL) ===
+    // === IMPORTAÇÃO DE CSV (NOVA LÓGICA: Frete = Recebido + A Receber) ===
     const btnImportar = document.getElementById('btnImportar');
     const modalImportar = document.getElementById('modalImportar');
     const inputCsv = document.getElementById('inputCsv');
@@ -578,13 +578,18 @@
               }
             }
 
+            // NOVA LÓGICA
+            const valorFrete = parseFloat((valorRecebido + valorAReceber).toFixed(2));
+            const adiantamento = parseFloat(valorRecebido.toFixed(2));
+            const saldo = parseFloat(valorAReceber.toFixed(2));
+
             return {
               diaViagem,
               transportadora: cliente.trim(),
-              valorFrete: valorAReceber,
-              adiantamento: valorRecebido,
+              valorFrete,
+              adiantamento,
               cte,
-              saldo: parseFloat((valorAReceber - valorRecebido).toFixed(2)),
+              saldo,
               status: 'Enviado para recebimento',
               dataEnvio: new Date().toISOString(),
               motorista: '',
@@ -592,7 +597,7 @@
               nfe: '',
               codigoRastreio: ''
             };
-          }).filter(d => d.diaViagem && d.transportadora);
+          }).filter(d => d.diaViagem && d.transportadora && (d.valorFrete > 0));
 
           renderizarPreview();
           previewContainer.classList.remove('hidden');
