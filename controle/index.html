@@ -14,7 +14,7 @@
       border-radius: 8px;
       overflow: hidden;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      top: 100%; /* abre para baixo */
+      top: 100%;
       right: 0;
     }
     .actions-menu button, .actions-menu a {
@@ -26,20 +26,14 @@
     }
     .modal-bg { background: rgba(0,0,0,0.5); }
     .acoes-col { width: 1%; white-space: nowrap; }
-.truncate {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.max-w-32 { max-width: 8rem; }
-.max-w-28 { max-width: 7rem; }
-.max-w-24 { max-width: 6rem; }
+    .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .max-w-32 { max-width: 8rem; }
+    .max-w-28 { max-width: 7rem; }
+    .max-w-24 { max-width: 6rem; }
   </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
-
   <div class="max-w-7xl mx-auto p-4">
-
     <!-- HEADER -->
     <header class="flex items-center gap-4 mb-6">
       <img src="https://i.ibb.co/ksSbDJKH/33fbdb6f-b2d9-44c4-963e-c559e83d6766.png" alt="logo" class="w-20 h-20 object-contain">
@@ -72,7 +66,7 @@
       </div>
     </section>
 
-    <!-- GRÁFICOS (MENOR E POR MÊS) -->
+    <!-- GRÁFICOS -->
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
       <div class="bg-white p-3 rounded-lg shadow lg:col-span-2">
         <canvas id="chart-saldo" height="160"></canvas>
@@ -107,7 +101,11 @@
         </select>
         <input type="number" name="valorFrete" placeholder="Valor Frete" step="0.01" required class="border p-2 py-1 rounded text-sm" />
         <input type="number" name="adiantamento" placeholder="Adiantamento" step="0.01" required class="border p-2 py-1 rounded text-sm" />
-        <button type="submit" class="bg-blue-600 text-white p-2 rounded col-span-2 md:col-span-1 text-sm hover:bg-blue-700">Salvar (senha)</button>
+        
+        <div class="flex gap-2 col-span-2 md:col-span-1">
+          <button type="button" id="btnImportar" class="bg-purple-600 text-white p-2 rounded text-sm hover:bg-purple-700 flex-1">Importar CSV</button>
+          <button type="submit" class="bg-blue-600 text-white p-2 rounded text-sm hover:bg-blue-700 flex-1">Salvar (senha)</button>
+        </div>
       </form>
 
       <!-- FILTROS -->
@@ -122,33 +120,52 @@
       </div>
     </section>
 
-<!-- TABELA (COMPACTA E INTELIGENTE) -->
-<section class="bg-white p-4 rounded-lg shadow mb-6 overflow-x-auto">
-  <h2 class="text-lg font-bold mb-3">Registros</h2>
-  <div class="overflow-x-auto">
-    <table class="min-w-full text-xs table-auto"> <!-- text-xs -->
-      <thead>
-        <tr class="bg-gray-100">
-          <th class="border px-1 py-1 whitespace-nowrap"><input type="checkbox" id="selectAll"></th>
-          <th class="border px-1 py-1 whitespace-nowrap max-w-32">Motorista</th> <!-- 32 chars max -->
-          <th class="border px-1 py-1 whitespace-nowrap max-w-28">Transp.</th>  <!-- 28 chars max -->
-          <th class="border px-1 py-1 whitespace-nowrap">Viagem</th>
-          <th class="border px-1 py-1 whitespace-nowrap">CTe</th>
-          <th class="border px-1 py-1 whitespace-nowrap">NFe</th>
-          <th class="border px-1 py-1 whitespace-nowrap max-w-24">Status</th>  <!-- 24 chars max -->
-          <th class="border px-1 py-1 whitespace-nowrap">Rastreio</th>
-          <th class="border px-1 py-1 whitespace-nowrap">Envelope</th>
-          <th class="border px-1 py-1 whitespace-nowrap text-right">Frete</th>
-          <th class="border px-1 py-1 whitespace-nowrap text-right">Adiant.</th>
-          <th class="border px-1 py-1 whitespace-nowrap text-right font-bold">Saldo</th>
-          <th class="border px-1 py-1 whitespace-nowrap">Data Receb.</th>
-          <th class="border px-1 py-1 acoes-col"></th>
-        </tr>
-      </thead>
-      <tbody id="lista"></tbody>
-    </table>
-  </div>
-</section>
+    <!-- TABELA -->
+    <section class="bg-white p-4 rounded-lg shadow mb-6 overflow-x-auto">
+      <h2 class="text-lg font-bold mb-3">Registros</h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-xs table-auto">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="border px-1 py-1 whitespace-nowrap"><input type="checkbox" id="selectAll"></th>
+              <th class="border px-1 py-1 whitespace-nowrap max-w-32">Motorista</th>
+              <th class="border px-1 py-1 whitespace-nowrap max-w-28">Transp.</th>
+              <th class="border px-1 py-1 whitespace-nowrap">Viagem</th>
+              <th class="border px-1 py-1 whitespace-nowrap">CTe</th>
+              <th class="border px-1 py-1 whitespace-nowrap">NFe</th>
+              <th class="border px-1 py-1 whitespace-nowrap max-w-24">Status</th>
+              <th class="border px-1 py-1 whitespace-nowrap">Rastreio</th>
+              <th class="border px-1 py-1 whitespace-nowrap">Envelope</th>
+              <th class="border px-1 py-1 whitespace-nowrap text-right">Frete</th>
+              <th class="border px-1 py-1 whitespace-nowrap text-right">Adiant.</th>
+              <th class="border px-1 py-1 whitespace-nowrap text-right font-bold">Saldo</th>
+              <th class="border px-1 py-1 whitespace-nowrap">Data Receb.</th>
+              <th class="border px-1 py-1 acoes-col"></th>
+            </tr>
+          </thead>
+          <tbody id="lista"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MODAL DE IMPORTAÇÃO (FORA DO FORM!) -->
+    <div id="modalImportar" class="fixed inset-0 modal-bg hidden flex items-center justify-center z-50">
+      <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl max-h-screen overflow-y-auto">
+        <h3 class="text-xl font-bold mb-4">Importar CSV de Saldos</h3>
+        <div class="mb-4">
+          <input type="file" id="inputCsv" accept=".csv" class="border p-2 rounded w-full" />
+          <p class="text-xs text-gray-500 mt-1">Selecione o arquivo .CSV exportado do sistema</p>
+        </div>
+        <div id="previewContainer" class="mb-4 hidden">
+          <h4 class="font-semibold mb-2">Pré-visualização (clique para editar):</h4>
+          <div id="previewTable" class="overflow-x-auto text-xs"></div>
+        </div>
+        <div class="flex gap-2">
+          <button id="btnProcessar" class="bg-green-600 text-white p-2 rounded flex-1 hover:bg-green-700 hidden">Salvar Todos</button>
+          <button id="btnCancelarImport" class="bg-gray-400 text-white p-2 rounded flex-1">Cancelar</button>
+        </div>
+      </div>
+    </div>
 
     <footer class="text-center text-gray-500 text-xs">Desenvolvido by Je4nGomes</footer>
   </div>
@@ -185,7 +202,6 @@
     const filtroEnvelope = document.getElementById('filtroEnvelope');
     const btnExportar = document.getElementById('btnExportar');
     const btnFiltrar = document.getElementById('btnFiltrar');
-
     const CARD_SALDO = document.getElementById('card-saldo');
     const CARD_ABERTO = document.getElementById('card-aberto');
     const CARD_PAGOS = document.getElementById('card-pagos');
@@ -221,10 +237,8 @@
     function popularSelects() {
       const selectMotorista = form.querySelector('select[name="motorista"]');
       selectMotorista.innerHTML = '<option value="">Selecione Motorista</option>' + motoristas.map(m => `<option value="${m}">${m}</option>`).join('');
-
       const selectTransportadora = form.querySelector('select[name="transportadora"]');
       selectTransportadora.innerHTML = '<option value="">Selecione Transportadora</option>' + transportadoras.map(t => `<option value="${t}">${t}</option>`).join('');
-
       const selectEnvelope = form.querySelector('select[name="envelope"]');
       selectEnvelope.innerHTML = '<option value="">Selecione Envelope</option>' + envelopes.map(e => `<option value="${e}">${e}</option>`).join('');
     }
@@ -240,17 +254,14 @@
       e.preventDefault();
       const senha = prompt('Digite a senha para salvar:');
       if (senha !== senhaMestra) return alert('Senha incorreta!');
-
       const dados = Object.fromEntries(new FormData(form).entries());
       dados.valorFrete = parseFloat(dados.valorFrete || 0);
       dados.adiantamento = parseFloat(dados.adiantamento || 0);
       dados.saldo = parseFloat((dados.valorFrete - dados.adiantamento).toFixed(2));
       dados.dataInsercao = new Date().toISOString();
-
       if (dados.status === 'Enviado para recebimento') {
         dados.dataEnvio = new Date().toISOString();
       }
-
       await push(saldosRef, dados);
       form.reset();
       alert('Registro salvo com sucesso!');
@@ -261,13 +272,11 @@
     function aplicarFiltros() {
       lista.innerHTML = '';
       dadosExportacao = [];
-
       const fM = filtroMotorista.value.toLowerCase().trim();
       const fT = filtroTransportadora.value.toLowerCase().trim();
       const fD = filtroData.value;
       const fC = filtroCte.value.toLowerCase().trim();
       const fE = filtroEnvelope.value.toLowerCase().trim();
-
       let filtrados = todosOsRegistros.filter(v => {
         return (!fM || (v.motorista || '').toLowerCase().includes(fM)) &&
                (!fT || (v.transportadora || '').toLowerCase().includes(fT)) &&
@@ -275,88 +284,81 @@
                (!fC || (v.cte || '').toLowerCase().includes(fC)) &&
                (!fE || (v.envelope || '').toLowerCase().includes(fE));
       });
-
       filtrados.sort((a, b) => (a.saldo > 0 ? 0 : 1) - (b.saldo > 0 ? 0 : 1));
       filtrados.forEach(r => renderizarLinha(r));
     }
 
-function renderizarLinha(val) {
-  const tr = document.createElement('tr');
-  const bgColor = {
-    'Na empresa, não enviado': 'bg-red-50',
-    'Com motorista': 'bg-orange-50',
-    'Enviado para recebimento': 'bg-blue-50',
-    'Pago': 'bg-green-50'
-  }[val.status] || '';
-  const statusColor = {
-    'Na empresa, não enviado': 'text-red-600',
-    'Com motorista': 'text-orange-600',
-    'Enviado para recebimento': 'text-blue-600',
-    'Pago': 'text-green-600'
-  }[val.status] || 'text-gray-700';
+    function renderizarLinha(val) {
+      const tr = document.createElement('tr');
+      const bgColor = {
+        'Na empresa, não enviado': 'bg-red-50',
+        'Com motorista': 'bg-orange-50',
+        'Enviado para recebimento': 'bg-blue-50',
+        'Pago': 'bg-green-50'
+      }[val.status] || '';
+      const statusColor = {
+        'Na empresa, não enviado': 'text-red-600',
+        'Com motorista': 'text-orange-600',
+        'Enviado para recebimento': 'text-blue-600',
+        'Pago': 'text-green-600'
+      }[val.status] || 'text-gray-700';
 
-  // Função para truncar texto
-  const truncar = (texto, max) => {
-    if (!texto) return '-';
-    return texto.length > max ? texto.substring(0, max - 3) + '...' : texto;
-  };
+      const truncar = (texto, max) => !texto ? '-' : texto.length > max ? texto.substring(0, max - 3) + '...' : texto;
+      const motorista = truncar(val.motorista, 15);
+      const transportadora = truncar(val.transportadora, 12);
+      const statusAbrev = val.status === 'Na empresa, não enviado' ? 'Na empresa' :
+                         val.status === 'Com motorista' ? 'Com mot.' :
+                         val.status === 'Enviado para recebimento' ? 'Enviado' :
+                         val.status === 'Pago' ? 'Pago' : val.status;
 
-  const motorista = truncar(val.motorista, 15);
-  const transportadora = truncar(val.transportadora, 12);
-  const statusAbrev = val.status === 'Na empresa, não enviado' ? 'Na empresa' :
-                     val.status === 'Com motorista' ? 'Com mot.' :
-                     val.status === 'Enviado para recebimento' ? 'Enviado' :
-                     val.status === 'Pago' ? 'Pago' : val.status;
-
-  tr.className = bgColor;
-  tr.innerHTML = `
-    <td class="border px-1 py-1 text-center"><input type="checkbox" class="rowCheck" data-saldo="${val.saldo || 0}" data-key="${val.key}"></td>
-    <td class="border px-1 py-1 whitespace-nowrap max-w-32 truncate" title="${val.motorista || ''}">${motorista}</td>
-    <td class="border px-1 py-1 whitespace-nowrap max-w-28 truncate" title="${val.transportadora || ''}">${transportadora}</td>
-    <td class="border px-1 py-1 whitespace-nowrap">${val.diaViagem ? new Date(val.diaViagem).toLocaleDateString('pt-BR') : '-'}</td>
-    <td class="border px-1 py-1 whitespace-nowrap">${val.cte || '-'}</td>
-    <td class="border px-1 py-1 whitespace-nowrap">${val.nfe || '-'}</td>
-    <td class="border px-1 py-1 whitespace-nowrap max-w-24 ${statusColor} font-medium" title="${val.status || ''}">${statusAbrev}</td>
-    <td class="border px-1 py-1 whitespace-nowrap">${val.codigoRastreio || '-'}</td>
-    <td class="border px-1 py-1 whitespace-nowrap">${val.envelope || '-'}</td>
-    <td class="border px-1 py-1 whitespace-nowrap text-right">R$ ${formatarNumero(val.valorFrete)}</td>
-    <td class="border px-1 py-1 whitespace-nowrap text-right">R$ ${formatarNumero(val.adiantamento)}</td>
-    <td class="border px-1 py-1 whitespace-nowrap text-right font-bold">R$ ${formatarNumero(val.saldo)}</td>
-    <td class="border px-1 py-1 whitespace-nowrap">${val.dataRecebimento ? formatarData(val.dataRecebimento) : '-'}</td>
-    <td class="border px-1 py-1 acoes-col align-middle">
-      <div class="relative">
-        <button data-key="${val.key}" class="actions-btn bg-gray-600 hover:bg-gray-700 text-white px-2 py-0.5 rounded text-xs">Ações</button>
-        <div id="actions-menu-${val.key}" class="actions-menu hidden absolute bg-white border rounded shadow-lg z-50 top-full right-0 mt-1">
-          ${val.pdfUrl 
-            ? `<a href="${val.pdfUrl}" target="_blank" class="text-blue-600 hover:bg-gray-100 block px-3 py-1 text-xs">Ver PDF</a>`
-            : `<button data-key="${val.key}" class="upload-btn text-blue-600 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Anexar PDF</button>`
-          }
-          <button data-key="${val.key}" class="delete-btn text-red-600 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Excluir</button>
-          ${val.saldo > 0 ? `<button data-key="${val.key}" class="mark-recebido-btn text-green-600 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Marcar como Recebido</button>` : ''}
-          <button data-key="${val.key}" class="edit-btn text-yellow-700 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Editar</button>
-        </div>
-      </div>
-    </td>
-  `;
-  lista.appendChild(tr);
-
-  dadosExportacao.push({
-    Motorista: val.motorista || '',
-    Transportadora: val.transportadora || '',
-    DiaViagem: val.diaViagem || '',
-    CTe: val.cte || '',
-    NFe: val.nfe || '',
-    Status: val.status || '',
-    CodigoRastreio: val.codigoRastreio || '',
-    Envelope: val.envelope || '',
-    Frete: formatarNumero(val.valorFrete),
-    Adiantamento: formatarNumero(val.adiantamento),
-    Saldo: formatarNumero(val.saldo),
-    DataRecebimento: val.dataRecebimento || '',
-    DataInsercao: val.dataInsercao || '',
-    PDF: val.pdfUrl || ''
-  });
-}
+      tr.className = bgColor;
+      tr.innerHTML = `
+        <td class="border px-1 py-1 text-center"><input type="checkbox" class="rowCheck" data-saldo="${val.saldo || 0}" data-key="${val.key}"></td>
+        <td class="border px-1 py-1 whitespace-nowrap max-w-32 truncate" title="${val.motorista || ''}">${motorista}</td>
+        <td class="border px-1 py-1 whitespace-nowrap max-w-28 truncate" title="${val.transportadora || ''}">${transportadora}</td>
+        <td class="border px-1 py-1 whitespace-nowrap">${val.diaViagem ? new Date(val.diaViagem).toLocaleDateString('pt-BR') : '-'}</td>
+        <td class="border px-1 py-1 whitespace-nowrap">${val.cte || '-'}</td>
+        <td class="border px-1 py-1 whitespace-nowrap">${val.nfe || '-'}</td>
+        <td class="border px-1 py-1 whitespace-nowrap max-w-24 ${statusColor} font-medium" title="${val.status || ''}">${statusAbrev}</td>
+        <td class="border px-1 py-1 whitespace-nowrap">${val.codigoRastreio || '-'}</td>
+        <td class="border px-1 py-1 whitespace-nowrap">${val.envelope || '-'}</td>
+        <td class="border px-1 py-1 whitespace-nowrap text-right">R$ ${formatarNumero(val.valorFrete)}</td>
+        <td class="border px-1 py-1 whitespace-nowrap text-right">R$ ${formatarNumero(val.adiantamento)}</td>
+        <td class="border px-1 py-1 whitespace-nowrap text-right font-bold">R$ ${formatarNumero(val.saldo)}</td>
+        <td class="border px-1 py-1 whitespace-nowrap">${val.dataRecebimento ? formatarData(val.dataRecebimento) : '-'}</td>
+        <td class="border px-1 py-1 acoes-col align-middle">
+          <div class="relative">
+            <button data-key="${val.key}" class="actions-btn bg-gray-600 hover:bg-gray-700 text-white px-2 py-0.5 rounded text-xs">Ações</button>
+            <div id="actions-menu-${val.key}" class="actions-menu hidden absolute bg-white border rounded shadow-lg z-50 top-full right-0 mt-1">
+              ${val.pdfUrl
+                ? `<a href="${val.pdfUrl}" target="_blank" class="text-blue-600 hover:bg-gray-100 block px-3 py-1 text-xs">Ver PDF</a>`
+                : `<button data-key="${val.key}" class="upload-btn text-blue-600 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Anexar PDF</button>`
+              }
+              <button data-key="${val.key}" class="delete-btn text-red-600 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Excluir</button>
+              ${val.saldo > 0 ? `<button data-key="${val.key}" class="mark-recebido-btn text-green-600 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Marcar como Recebido</button>` : ''}
+              <button data-key="${val.key}" class="edit-btn text-yellow-700 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Editar</button>
+            </div>
+          </div>
+        </td>
+      `;
+      lista.appendChild(tr);
+      dadosExportacao.push({
+        Motorista: val.motorista || '',
+        Transportadora: val.transportadora || '',
+        DiaViagem: val.diaViagem || '',
+        CTe: val.cte || '',
+        NFe: val.nfe || '',
+        Status: val.status || '',
+        CodigoRastreio: val.codigoRastreio || '',
+        Envelope: val.envelope || '',
+        Frete: formatarNumero(val.valorFrete),
+        Adiantamento: formatarNumero(val.adiantamento),
+        Saldo: formatarNumero(val.saldo),
+        DataRecebimento: val.dataRecebimento || '',
+        DataInsercao: val.dataInsercao || '',
+        PDF: val.pdfUrl || ''
+      });
+    }
 
     btnExportar.addEventListener('click', () => {
       const ws = XLSX.utils.json_to_sheet(dadosExportacao);
@@ -410,7 +412,6 @@ function renderizarLinha(val) {
       if (e.target.classList.contains('edit-btn')) {
         const reg = todosOsRegistros.find(r => r.key === key);
         if (!reg) return;
-
         const modal = document.createElement('div');
         modal.className = 'fixed inset-0 modal-bg flex items-center justify-center z-50';
         modal.innerHTML = `
@@ -449,9 +450,7 @@ function renderizarLinha(val) {
           </div>
         `;
         document.body.appendChild(modal);
-
         document.getElementById(`cancel-${key}`).onclick = () => modal.remove();
-
         document.getElementById(`form-edit-${key}`).addEventListener('submit', async (ev) => {
           ev.preventDefault();
           const dados = Object.fromEntries(new FormData(ev.target).entries());
@@ -465,53 +464,39 @@ function renderizarLinha(val) {
       }
     });
 
-    // === GRÁFICOS POR MÊS ===
     function montarCardsCharts() {
       CARD_TOTAL.textContent = todosOsRegistros.length;
-
       const totais = todosOsRegistros.reduce((acc, r) => {
         acc.saldoTotal += Number(r.saldo || 0);
         if (Number(r.saldo || 0) > 0) acc.aberto++;
         else acc.pago++;
         return acc;
       }, { saldoTotal: 0, aberto: 0, pago: 0 });
-
       CARD_SALDO.textContent = `R$ ${formatarNumero(totais.saldoTotal)}`;
       CARD_ABERTO.textContent = totais.aberto;
       CARD_PAGOS.textContent = totais.pago;
 
-      // GRÁFICO DE STATUS
       const statusCount = {};
       todosOsRegistros.forEach(r => {
         const s = r.status || 'Outro';
         statusCount[s] = (statusCount[s] || 0) + 1;
       });
-
       const ctxStatus = document.getElementById('chart-status').getContext('2d');
       if (chartStatus) chartStatus.destroy();
       chartStatus = new Chart(ctxStatus, {
         type: 'pie',
-        data: {
-          labels: Object.keys(statusCount),
-          datasets: [{
-            data: Object.values(statusCount),
-            backgroundColor: ['#ef4444', '#f97316', '#3b82f6', '#22c55e']
-          }]
-        },
+        data: { labels: Object.keys(statusCount), datasets: [{ data: Object.values(statusCount), backgroundColor: ['#ef4444', '#f97316', '#3b82f6', '#22c55e'] }] },
         options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
       });
 
-      // GRÁFICO DE SALDO POR MÊS (ACUMULADO)
       const ctxSaldo = document.getElementById('chart-saldo').getContext('2d');
       if (chartSaldo) chartSaldo.destroy();
-
       const porMes = {};
       todosOsRegistros.forEach(r => {
         if (!r.diaViagem) return;
-        const mesAno = r.diaViagem.substring(0, 7); // YYYY-MM
+        const mesAno = r.diaViagem.substring(0, 7);
         porMes[mesAno] = (porMes[mesAno] || 0) + Number(r.saldo || 0);
       });
-
       const mesesOrdenados = Object.keys(porMes).sort();
       const labels = mesesOrdenados.map(m => {
         const [ano, mes] = m.split('-');
@@ -519,30 +504,13 @@ function renderizarLinha(val) {
         return data.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
       });
       const valores = mesesOrdenados.map(m => porMes[m]);
-
       chartSaldo = new Chart(ctxSaldo, {
         type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Saldo em Aberto',
-            data: valores,
-            backgroundColor: '#dc2626',
-            borderColor: '#b91c1c',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: { beginAtZero: true }
-          }
-        }
+        data: { labels, datasets: [{ label: 'Saldo em Aberto', data: valores, backgroundColor: '#dc2626', borderColor: '#b91c1c', borderWidth: 1 }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
       });
     }
 
-    // CHECKBOXES
     lista.addEventListener('change', (e) => {
       if (e.target.classList.contains('rowCheck')) {
         let total = 0;
@@ -558,6 +526,184 @@ function renderizarLinha(val) {
     });
 
     montarCardsCharts();
+
+    // === IMPORTAÇÃO DE CSV (CORRIGIDA E FUNCIONAL) ===
+    const btnImportar = document.getElementById('btnImportar');
+    const modalImportar = document.getElementById('modalImportar');
+    const inputCsv = document.getElementById('inputCsv');
+    const previewContainer = document.getElementById('previewContainer');
+    const previewTable = document.getElementById('previewTable');
+    const btnProcessar = document.getElementById('btnProcessar');
+    const btnCancelarImport = document.getElementById('btnCancelarImport');
+    let dadosImportados = [];
+
+    btnImportar.addEventListener('click', () => {
+      modalImportar.classList.remove('hidden');
+      inputCsv.value = '';
+      previewContainer.classList.add('hidden');
+      dadosImportados = [];
+    });
+
+    btnCancelarImport.addEventListener('click', () => {
+      modalImportar.classList.add('hidden');
+    });
+
+    inputCsv.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        try {
+          const data = ev.target.result;
+          const workbook = XLSX.read(data, { type: 'binary' });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+          const json = XLSX.utils.sheet_to_json(sheet, { raw: false, defval: '' });
+
+          dadosImportados = json.map(row => {
+            const dataStr = row['Data'] || '';
+            const cliente = row['Cliente'] || '';
+            const valorRecebido = parseFloat((row['ValorRecebido'] || '0').replace(',', '.')) || 0;
+            const valorAReceber = parseFloat((row['ValorAReceber'] || '0').replace(',', '.')) || 0;
+            const hist = row['Hist'] || '';
+            const cteMatch = hist.match(/CTe:\s*(\d+)/i);
+            const cte = cteMatch ? cteMatch[1] : '';
+
+            let diaViagem = '';
+            if (dataStr) {
+              const partes = dataStr.split('/');
+              if (partes.length === 3) {
+                diaViagem = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+              }
+            }
+
+            return {
+              diaViagem,
+              transportadora: cliente.trim(),
+              valorFrete: valorAReceber,
+              adiantamento: valorRecebido,
+              cte,
+              saldo: parseFloat((valorAReceber - valorRecebido).toFixed(2)),
+              status: 'Enviado para recebimento',
+              dataEnvio: new Date().toISOString(),
+              motorista: '',
+              envelope: '',
+              nfe: '',
+              codigoRastreio: ''
+            };
+          }).filter(d => d.diaViagem && d.transportadora);
+
+          renderizarPreview();
+          previewContainer.classList.remove('hidden');
+          btnProcessar.classList.remove('hidden');
+        } catch (err) {
+          console.error("Erro ao processar CSV:", err);
+          alert('Erro ao ler o CSV. Verifique o formato (use ; como separador e cabeçalhos corretos).');
+        }
+      };
+
+      reader.readAsBinaryString(file);
+    });
+
+    function renderizarPreview() {
+      previewTable.innerHTML = '';
+      if (dadosImportados.length === 0) {
+        previewTable.innerHTML = '<p class="text-gray-500">Nenhum dado válido encontrado.</p>';
+        return;
+      }
+
+      const table = document.createElement('table');
+      table.className = 'min-w-full text-xs table-auto border';
+      table.innerHTML = `
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="border px-2 py-1">Data</th>
+            <th class="border px-2 py-1">Transportadora</th>
+            <th class="border px-2 py-1">CTe</th>
+            <th class="border px-2 py-1 text-right">Frete</th>
+            <th class="border px-2 py-1 text-right">Adiant.</th>
+            <th class="border px-2 py-1 text-right">Saldo</th>
+            <th class="border px-2 py-1">Motorista</th>
+            <th class="border px-2 py-1">Envelope</th>
+            <th class="border px-2 py-1">Ações</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+
+      const tbody = table.querySelector('tbody');
+      dadosImportados.forEach((d, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="border px-2 py-1">${d.diaViagem.split('-').reverse().join('/')}</td>
+          <td class="border px-2 py-1 truncate max-w-32" title="${d.transportadora}">${d.transportadora}</td>
+          <td class="border px-2 py-1">${d.cte || '-'}</td>
+          <td class="border px-2 py-1 text-right">R$ ${formatarNumero(d.valorFrete)}</td>
+          <td class="border px-2 py-1 text-right">R$ ${formatarNumero(d.adiantamento)}</td>
+          <td class="border px-2 py-1 text-right font-bold">R$ ${formatarNumero(d.saldo)}</td>
+          <td class="border px-2 py-1">
+            <select class="motorista-select text-xs border rounded p-1 w-full" data-index="${i}">
+              <option value="">Selecione</option>
+              ${motoristas.map(m => `<option value="${m}" ${d.motorista===m?'selected':''}>${m}</option>`).join('')}
+            </select>
+          </td>
+          <td class="border px-2 py-1">
+            <select class="envelope-select text-xs border rounded p-1 w-full" data-index="${i}">
+              <option value="">Selecione</option>
+              ${envelopes.map(e => `<option value="${e}" ${d.envelope===e?'selected':''}>${e}</option>`).join('')}
+            </select>
+          </td>
+          <td class="border px-2 py-1 text-center">
+            <button class="text-red-600 text-xs remover-linha" data-index="${i}">X</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      table.querySelectorAll('.motorista-select').forEach(sel => {
+        sel.addEventListener('change', (e) => {
+          const idx = e.target.dataset.index;
+          dadosImportados[idx].motorista = e.target.value;
+        });
+      });
+      table.querySelectorAll('.envelope-select').forEach(sel => {
+        sel.addEventListener('change', (e) => {
+          const idx = e.target.dataset.index;
+          dadosImportados[idx].envelope = e.target.value;
+        });
+      });
+      table.querySelectorAll('.remover-linha').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const idx = parseInt(e.target.dataset.index);
+          dadosImportados.splice(idx, 1);
+          renderizarPreview();
+        });
+      });
+
+      previewTable.appendChild(table);
+    }
+
+    btnProcessar.addEventListener('click', async () => {
+      const senha = prompt('Digite a senha para importar:');
+      if (senha !== senhaMestra) return alert('Senha incorreta!');
+
+      const invalidos = dadosImportados.filter(d => !d.motorista || !d.envelope);
+      if (invalidos.length > 0) {
+        if (!confirm(`Existem ${invalidos.length} registros sem motorista ou envelope. Deseja salvar mesmo assim?`)) return;
+      }
+
+      try {
+        for (const dados of dadosImportados) {
+          await push(saldosRef, dados);
+        }
+        alert(`Importação concluída! ${dadosImportados.length} registros salvos.`);
+        modalImportar.classList.add('hidden');
+        dadosImportados = [];
+      } catch (err) {
+        alert('Erro ao salvar: ' + err.message);
+      }
+    });
   </script>
 </body>
 </html>
