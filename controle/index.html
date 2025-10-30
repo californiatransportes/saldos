@@ -8,6 +8,10 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Datepicker (Flatpickr) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
   <style>
     .actions-menu {
       min-width: 180px;
@@ -27,9 +31,9 @@
     .modal-bg { background: rgba(0,0,0,0.5); }
     .acoes-col { width: 1%; white-space: nowrap; }
     .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .max-w-32 { max-width: 8rem; }
     .max-w-28 { max-width: 7rem; }
     .max-w-24 { max-width: 6rem; }
+    .flatpickr-input { @apply border p-2 rounded text-sm w-32; }
   </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -76,8 +80,9 @@
       </div>
     </section>
 
-    <!-- FORMULÁRIO -->
+    <!-- FORMULÁRIO DE INSERÇÃO -->
     <section class="bg-white p-4 rounded-lg shadow mb-6">
+      <h2 class="text-lg font-bold mb-3">Inserir Registro</h2>
       <form id="formulario" class="grid grid-cols-2 md:grid-cols-4 gap-3">
         <select name="motorista" required class="border p-2 rounded text-sm">
           <option value="">Selecione Motorista</option>
@@ -93,6 +98,8 @@
           <option value="Na empresa, não enviado" style="background:#fca5a5; color:#991b1b;">Na empresa, não enviado</option>
           <option value="Com motorista" style="background:#fdba74; color:#9a3412;">Com motorista</option>
           <option value="Enviado para recebimento" style="background:#93c5fd; color:#1e40af;">Enviado para recebimento</option>
+          <option value="Não recebido" style="background:#d4d4d8; color:#3f3f46;">Não recebido</option>
+          <option value="Localizar" style="background:#fbbf24; color:#78350f;">Localizar</option>
           <option value="Pago" style="background:#86efac; color:#166534;">Pago</option>
         </select>
         <input name="codigoRastreio" placeholder="Código de Rastreio" class="border p-2 rounded text-sm" />
@@ -107,15 +114,43 @@
           <button type="submit" class="bg-blue-600 text-white p-2 rounded text-sm hover:bg-blue-700 flex-1">Salvar (senha)</button>
         </div>
       </form>
+    </section>
 
-      <!-- FILTROS -->
-      <div class="flex flex-wrap gap-3 mt-4">
-        <input id="filtroMotorista" placeholder="Filtrar Motorista" class="border p-2 rounded text-sm" />
-        <input id="filtroTransportadora" placeholder="Filtrar Transportadora" class="border p-2 rounded text-sm" />
+    <!-- FILTROS -->
+    <section class="bg-white p-4 rounded-lg shadow mb-6">
+      <h2 class="text-lg font-bold mb-3">Filtros</h2>
+      <div class="flex flex-wrap gap-3 items-center">
+        <select id="filtroMotoristaSelect" class="border p-2 rounded text-sm">
+          <option value="">Todos os Motoristas</option>
+        </select>
+        <select id="filtroTransportadoraSelect" class="border p-2 rounded text-sm">
+          <option value="">Todas as Transportadoras</option>
+        </select>
+        <select id="filtroStatus" class="border p-2 rounded text-sm">
+          <option value="">Todos os Status</option>
+          <option value="Na empresa, não enviado">Na empresa</option>
+          <option value="Com motorista">Com motorista</option>
+          <option value="Enviado para recebimento">Enviado</option>
+          <option value="Não recebido">Não recebido</option>
+          <option value="Localizar">Localizar</option>
+          <option value="Pago">Pago</option>
+        </select>
         <input id="filtroCte" placeholder="Filtrar CTe" class="border p-2 rounded text-sm" />
-        <input id="filtroEnvelope" placeholder="Filtrar Envelope" class="border p-2 rounded text-sm" />
-        <input id="filtroData" type="date" class="border p-2 rounded text-sm" />
+        
+        <!-- FILTRO ENVELOPE COMO SELECT -->
+        <select id="filtroEnvelopeSelect" class="border p-2 rounded text-sm">
+          <option value="">Todos os Envelopes</option>
+        </select>
+
+        <!-- FILTRO DE DATA COM CALENDÁRIO -->
+        <div class="flex gap-1 items-center">
+          <input id="filtroDataInicio" type="text" placeholder="De" class="flatpickr-input" readonly />
+          <span class="text-gray-600">até</span>
+          <input id="filtroDataFim" type="text" placeholder="Até" class="flatpickr-input" readonly />
+        </div>
+
         <button id="btnFiltrar" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">Aplicar Filtros</button>
+        <button id="btnLimparFiltros" class="bg-gray-500 text-white px-4 py-2 rounded text-sm hover:bg-gray-600">Limpar</button>
         <button id="btnExportar" class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">Exportar .xlsx</button>
       </div>
     </section>
@@ -128,7 +163,7 @@
           <thead>
             <tr class="bg-gray-100">
               <th class="border px-1 py-1 whitespace-nowrap"><input type="checkbox" id="selectAll"></th>
-              <th class="border px-1 py-1 whitespace-nowrap max-w-32">Motorista</th>
+              <th class="border px-1 py-1 whitespace-nowrap max-w-28">Motorista</th>
               <th class="border px-1 py-1 whitespace-nowrap max-w-28">Transp.</th>
               <th class="border px-1 py-1 whitespace-nowrap">Viagem</th>
               <th class="border px-1 py-1 whitespace-nowrap">CTe</th>
@@ -139,7 +174,10 @@
               <th class="border px-1 py-1 whitespace-nowrap text-right">Frete</th>
               <th class="border px-1 py-1 whitespace-nowrap text-right">Adiant.</th>
               <th class="border px-1 py-1 whitespace-nowrap text-right font-bold">Saldo</th>
-              <th class="border px-1 py-1 whitespace-nowrap">Data Receb.</th>
+              <th class="border px-1 py-1 whitespace-nowrap text-xs">Receb. Env.</th>
+              <th class="border px-1 py-1 whitespace-nowrap text-xs">Digitaliz.</th>
+              <th class="border px-1 py-1 whitespace-nowrap text-xs">Env. Cliente</th>
+              <th class="border px-1 py-1 whitespace-nowrap">Recebido</th>
               <th class="border px-1 py-1 acoes-col"></th>
             </tr>
           </thead>
@@ -195,13 +233,16 @@
 
     const form = document.getElementById('formulario');
     const lista = document.getElementById('lista');
-    const filtroMotorista = document.getElementById('filtroMotorista');
-    const filtroTransportadora = document.getElementById('filtroTransportadora');
-    const filtroData = document.getElementById('filtroData');
+    const filtroMotoristaSelect = document.getElementById('filtroMotoristaSelect');
+    const filtroTransportadoraSelect = document.getElementById('filtroTransportadoraSelect');
+    const filtroStatus = document.getElementById('filtroStatus');
+    const filtroDataInicio = document.getElementById('filtroDataInicio');
+    const filtroDataFim = document.getElementById('filtroDataFim');
     const filtroCte = document.getElementById('filtroCte');
-    const filtroEnvelope = document.getElementById('filtroEnvelope');
-    const btnExportar = document.getElementById('btnExportar');
+    const filtroEnvelopeSelect = document.getElementById('filtroEnvelopeSelect');
     const btnFiltrar = document.getElementById('btnFiltrar');
+    const btnLimparFiltros = document.getElementById('btnLimparFiltros');
+    const btnExportar = document.getElementById('btnExportar');
     const CARD_SALDO = document.getElementById('card-saldo');
     const CARD_ABERTO = document.getElementById('card-aberto');
     const CARD_PAGOS = document.getElementById('card-pagos');
@@ -217,8 +258,43 @@
       if (!iso) return '-';
       const d = new Date(iso);
       if (isNaN(d)) return iso;
-      return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
     };
+
+    function parseISODateLocal(isoString) {
+      if (!isoString) return null;
+      const [datePart] = isoString.split('T');
+      const [year, month, day] = datePart.split('-');
+      return new Date(year, month - 1, day);
+    }
+
+    function normalizarNome(nome) {
+      return nome.trim().toLowerCase()
+        .replace(/[^\w\s]/g, '')
+        .replace(/\s+/g, ' ');
+    }
+
+    function encontrarTransportadoraOficial(nomeCsv) {
+      const nomeNorm = normalizarNome(nomeCsv);
+      for (const oficial of transportadoras) {
+        if (normalizarNome(oficial) === nomeNorm) return oficial;
+      }
+      for (const oficial of transportadoras) {
+        if (normalizarNome(oficial).includes(nomeNorm) || nomeNorm.includes(normalizarNome(oficial))) {
+          return oficial;
+        }
+      }
+      return nomeCsv.trim();
+    }
+
+    function converterDataBrParaIso(dataBr) {
+      if (!dataBr) return null;
+      const partes = dataBr.split('/');
+      if (partes.length !== 3) return null;
+      const [dia, mes, ano] = partes;
+      if (dia.length !== 2 || mes.length !== 2 || ano.length !== 4) return null;
+      return `${ano}-${mes}-${dia}`;
+    }
 
     let todosOsRegistros = [];
     let dadosExportacao = [];
@@ -232,6 +308,7 @@
       transportadoras = Object.values(data).filter(c => c.tipo === 'transportadora').map(c => c.nome).sort();
       envelopes = Object.values(data).filter(c => c.tipo === 'envelope').map(c => c.nome).sort();
       popularSelects();
+      popularFiltrosSelect();
     });
 
     function popularSelects() {
@@ -242,6 +319,15 @@
       const selectEnvelope = form.querySelector('select[name="envelope"]');
       selectEnvelope.innerHTML = '<option value="">Selecione Envelope</option>' + envelopes.map(e => `<option value="${e}">${e}</option>`).join('');
     }
+
+    function popularFiltrosSelect() {
+      filtroMotoristaSelect.innerHTML = '<option value="">Todos os Motoristas</option>' + motoristas.map(m => `<option value="${m}">${m}</option>`).join('');
+      filtroTransportadoraSelect.innerHTML = '<option value="">Todas as Transportadoras</option>' + transportadoras.map(t => `<option value="${t}">${t}</option>`).join('');
+      filtroEnvelopeSelect.innerHTML = '<option value="">Todos os Envelopes</option>' + envelopes.map(e => `<option value="${e}">${e}</option>`).join('');
+    }
+
+    flatpickr(filtroDataInicio, { locale: "pt", dateFormat: "d/m/Y", allowInput: true, clickOpens: true });
+    flatpickr(filtroDataFim, { locale: "pt", dateFormat: "d/m/Y", allowInput: true, clickOpens: true });
 
     onValue(saldosRef, (snap) => {
       const data = snap.val() || {};
@@ -268,22 +354,47 @@
     });
 
     btnFiltrar.addEventListener('click', aplicarFiltros);
+    btnLimparFiltros.addEventListener('click', () => {
+      filtroMotoristaSelect.value = '';
+      filtroTransportadoraSelect.value = '';
+      filtroStatus.value = '';
+      filtroCte.value = '';
+      filtroEnvelopeSelect.value = '';
+      filtroDataInicio.value = '';
+      filtroDataFim.value = '';
+      aplicarFiltros();
+    });
 
     function aplicarFiltros() {
       lista.innerHTML = '';
       dadosExportacao = [];
-      const fM = filtroMotorista.value.toLowerCase().trim();
-      const fT = filtroTransportadora.value.toLowerCase().trim();
-      const fD = filtroData.value;
+
+      const fM = filtroMotoristaSelect.value;
+      const fT = filtroTransportadoraSelect.value;
+      const fS = filtroStatus.value;
       const fC = filtroCte.value.toLowerCase().trim();
-      const fE = filtroEnvelope.value.toLowerCase().trim();
+      const fE = filtroEnvelopeSelect.value;
+      const dataInicioIso = filtroDataInicio.value ? converterDataBrParaIso(filtroDataInicio.value) : null;
+      const dataFimIso = filtroDataFim.value ? converterDataBrParaIso(filtroDataFim.value) : null;
+
       let filtrados = todosOsRegistros.filter(v => {
-        return (!fM || (v.motorista || '').toLowerCase().includes(fM)) &&
-               (!fT || (v.transportadora || '').toLowerCase().includes(fT)) &&
-               (!fD || v.diaViagem === fD) &&
-               (!fC || (v.cte || '').toLowerCase().includes(fC)) &&
-               (!fE || (v.envelope || '').toLowerCase().includes(fE));
+        const matchMotorista = !fM || v.motorista === fM;
+        const matchTransportadora = !fT || v.transportadora === fT;
+        const matchStatus = !fS || v.status === fS;
+        const matchCte = !fC || (v.cte || '').toLowerCase().includes(fC);
+        const matchEnvelope = !fE || v.envelope === fE;
+
+        let matchData = true;
+        if (dataInicioIso || dataFimIso) {
+          const dataViagem = v.diaViagem;
+          if (!dataViagem) return false;
+          if (dataInicioIso && dataViagem < dataInicioIso) return false;
+          if (dataFimIso && dataViagem > dataFimIso) return false;
+        }
+
+        return matchMotorista && matchTransportadora && matchStatus && matchCte && matchEnvelope && matchData;
       });
+
       filtrados.sort((a, b) => (a.saldo > 0 ? 0 : 1) - (b.saldo > 0 ? 0 : 1));
       filtrados.forEach(r => renderizarLinha(r));
     }
@@ -294,29 +405,37 @@
         'Na empresa, não enviado': 'bg-red-50',
         'Com motorista': 'bg-orange-50',
         'Enviado para recebimento': 'bg-blue-50',
+        'Não recebido': 'bg-zinc-50',
+        'Localizar': 'bg-amber-50',
         'Pago': 'bg-green-50'
-      }[val.status] || '';
+      }[val.status] || 'bg-gray-50';
+
       const statusColor = {
         'Na empresa, não enviado': 'text-red-600',
         'Com motorista': 'text-orange-600',
         'Enviado para recebimento': 'text-blue-600',
+        'Não recebido': 'text-zinc-700',
+        'Localizar': 'text-amber-700',
         'Pago': 'text-green-600'
       }[val.status] || 'text-gray-700';
+
+      const statusAbrev = val.status === 'Na empresa, não enviado' ? 'Na empresa' :
+                         val.status === 'Com motorista' ? 'Com mot.' :
+                         val.status === 'Enviado para recebimento' ? 'Enviado' :
+                         val.status === 'Não recebido' ? 'Não rec.' :
+                         val.status === 'Localizar' ? 'Localizar' :
+                         val.status === 'Pago' ? 'Pago' : val.status;
 
       const truncar = (texto, max) => !texto ? '-' : texto.length > max ? texto.substring(0, max - 3) + '...' : texto;
       const motorista = truncar(val.motorista, 15);
       const transportadora = truncar(val.transportadora, 12);
-      const statusAbrev = val.status === 'Na empresa, não enviado' ? 'Na empresa' :
-                         val.status === 'Com motorista' ? 'Com mot.' :
-                         val.status === 'Enviado para recebimento' ? 'Enviado' :
-                         val.status === 'Pago' ? 'Pago' : val.status;
 
       tr.className = bgColor;
       tr.innerHTML = `
         <td class="border px-1 py-1 text-center"><input type="checkbox" class="rowCheck" data-saldo="${val.saldo || 0}" data-key="${val.key}"></td>
-        <td class="border px-1 py-1 whitespace-nowrap max-w-32 truncate" title="${val.motorista || ''}">${motorista}</td>
+        <td class="border px-1 py-1 whitespace-nowrap max-w-28 truncate" title="${val.motorista || ''}">${motorista}</td>
         <td class="border px-1 py-1 whitespace-nowrap max-w-28 truncate" title="${val.transportadora || ''}">${transportadora}</td>
-        <td class="border px-1 py-1 whitespace-nowrap">${val.diaViagem ? new Date(val.diaViagem).toLocaleDateString('pt-BR') : '-'}</td>
+        <td class="border px-1 py-1 whitespace-nowrap">${val.diaViagem ? parseISODateLocal(val.diaViagem).toLocaleDateString('pt-BR') : '-'}</td>
         <td class="border px-1 py-1 whitespace-nowrap">${val.cte || '-'}</td>
         <td class="border px-1 py-1 whitespace-nowrap">${val.nfe || '-'}</td>
         <td class="border px-1 py-1 whitespace-nowrap max-w-24 ${statusColor} font-medium" title="${val.status || ''}">${statusAbrev}</td>
@@ -325,6 +444,9 @@
         <td class="border px-1 py-1 whitespace-nowrap text-right">R$ ${formatarNumero(val.valorFrete)}</td>
         <td class="border px-1 py-1 whitespace-nowrap text-right">R$ ${formatarNumero(val.adiantamento)}</td>
         <td class="border px-1 py-1 whitespace-nowrap text-right font-bold">R$ ${formatarNumero(val.saldo)}</td>
+        <td class="border px-1 py-1 whitespace-nowrap text-xs">${formatarData(val.dataRecebimentoEnvelope)}</td>
+        <td class="border px-1 py-1 whitespace-nowrap text-xs">${formatarData(val.dataDigitalizacao)}</td>
+        <td class="border px-1 py-1 whitespace-nowrap text-xs">${formatarData(val.dataEnvioCliente)}</td>
         <td class="border px-1 py-1 whitespace-nowrap">${val.dataRecebimento ? formatarData(val.dataRecebimento) : '-'}</td>
         <td class="border px-1 py-1 acoes-col align-middle">
           <div class="relative">
@@ -354,6 +476,9 @@
         Frete: formatarNumero(val.valorFrete),
         Adiantamento: formatarNumero(val.adiantamento),
         Saldo: formatarNumero(val.saldo),
+        DataRecebimentoEnvelope: val.dataRecebimentoEnvelope || '',
+        DataDigitalizacao: val.dataDigitalizacao || '',
+        DataEnvioCliente: val.dataEnvioCliente || '',
         DataRecebimento: val.dataRecebimento || '',
         DataInsercao: val.dataInsercao || '',
         PDF: val.pdfUrl || ''
@@ -405,7 +530,7 @@
       if (e.target.classList.contains('mark-recebido-btn')) {
         let data = prompt('Data de recebimento (ou deixe em branco para agora):');
         if (data === null) return;
-        if (!data.trim()) data = new Date().toLocaleString('pt-BR');
+        if (!data.trim()) data = new Date().toISOString();
         await update(ref(db, `saldos/${key}`), { saldo: 0, dataRecebimento: data, status: 'Pago' });
       }
 
@@ -433,6 +558,8 @@
                 <option value="Na empresa, não enviado" ${reg.status==='Na empresa, não enviado'?'selected':''} style="background:#fca5a5;color:#991b1b;">Na empresa, não enviado</option>
                 <option value="Com motorista" ${reg.status==='Com motorista'?'selected':''} style="background:#fdba74;color:#9a3412;">Com motorista</option>
                 <option value="Enviado para recebimento" ${reg.status==='Enviado para recebimento'?'selected':''} style="background:#93c5fd;color:#1e40af;">Enviado para recebimento</option>
+                <option value="Não recebido" ${reg.status==='Não recebido'?'selected':''} style="background:#d4d4d8;color:#3f3f46;">Não recebido</option>
+                <option value="Localizar" ${reg.status==='Localizar'?'selected':''} style="background:#fbbf24;color:#78350f;">Localizar</option>
                 <option value="Pago" ${reg.status==='Pago'?'selected':''} style="background:#86efac;color:#166534;">Pago</option>
               </select>
               <input name="codigoRastreio" value="${reg.codigoRastreio||''}" class="border p-2 rounded" />
@@ -442,6 +569,9 @@
               </select>
               <input type="number" name="valorFrete" value="${reg.valorFrete||0}" step="0.01" class="border p-2 rounded" required />
               <input type="number" name="adiantamento" value="${reg.adiantamento||0}" step="0.01" class="border p-2 rounded" required />
+              <input type="date" name="dataRecebimentoEnvelope" value="${reg.dataRecebimentoEnvelope||''}" class="border p-2 rounded col-span-2" placeholder="Receb. Envelope" />
+              <input type="date" name="dataDigitalizacao" value="${reg.dataDigitalizacao||''}" class="border p-2 rounded" placeholder="Digitalização" />
+              <input type="date" name="dataEnvioCliente" value="${reg.dataEnvioCliente||''}" class="border p-2 rounded" placeholder="Envio Cliente" />
               <div class="col-span-2 flex gap-2">
                 <button type="submit" class="bg-blue-600 text-white p-2 rounded flex-1">Salvar</button>
                 <button type="button" id="cancel-${key}" class="bg-gray-400 text-white p-2 rounded flex-1">Cancelar</button>
@@ -481,11 +611,26 @@
         const s = r.status || 'Outro';
         statusCount[s] = (statusCount[s] || 0) + 1;
       });
+
+      const statusOrder = ['Na empresa, não enviado', 'Com motorista', 'Enviado para recebimento', 'Não recebido', 'Localizar', 'Pago', 'Outro'];
+      const labels = statusOrder.filter(s => statusCount[s]);
+      const dataValues = labels.map(s => statusCount[s]);
+      const colors = {
+        'Na empresa, não enviado': '#ef4444',
+        'Com motorista': '#f97316',
+        'Enviado para recebimento': '#3b82f6',
+        'Não recebido': '#71717a',
+        'Localizar': '#f59e0b',
+        'Pago': '#22c55e',
+        'Outro': '#6b7280'
+      };
+      const backgroundColors = labels.map(s => colors[s]);
+
       const ctxStatus = document.getElementById('chart-status').getContext('2d');
       if (chartStatus) chartStatus.destroy();
       chartStatus = new Chart(ctxStatus, {
         type: 'pie',
-        data: { labels: Object.keys(statusCount), datasets: [{ data: Object.values(statusCount), backgroundColor: ['#ef4444', '#f97316', '#3b82f6', '#22c55e'] }] },
+        data: { labels, datasets: [{ data: dataValues, backgroundColor: backgroundColors }] },
         options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
       });
 
@@ -498,7 +643,7 @@
         porMes[mesAno] = (porMes[mesAno] || 0) + Number(r.saldo || 0);
       });
       const mesesOrdenados = Object.keys(porMes).sort();
-      const labels = mesesOrdenados.map(m => {
+      const labelsSaldo = mesesOrdenados.map(m => {
         const [ano, mes] = m.split('-');
         const data = new Date(ano, mes - 1);
         return data.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
@@ -506,7 +651,7 @@
       const valores = mesesOrdenados.map(m => porMes[m]);
       chartSaldo = new Chart(ctxSaldo, {
         type: 'bar',
-        data: { labels, datasets: [{ label: 'Saldo em Aberto', data: valores, backgroundColor: '#dc2626', borderColor: '#b91c1c', borderWidth: 1 }] },
+        data: { labels: labelsSaldo, datasets: [{ label: 'Saldo em Aberto', data: valores, backgroundColor: '#dc2626', borderColor: '#b91c1c', borderWidth: 1 }] },
         options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
       });
     }
@@ -527,7 +672,7 @@
 
     montarCardsCharts();
 
-    // === IMPORTAÇÃO DE CSV (NOVA LÓGICA: Frete = Recebido + A Receber) ===
+    // === IMPORTAÇÃO DE CSV ===
     const btnImportar = document.getElementById('btnImportar');
     const modalImportar = document.getElementById('modalImportar');
     const inputCsv = document.getElementById('inputCsv');
@@ -578,14 +723,13 @@
               }
             }
 
-            // NOVA LÓGICA
             const valorFrete = parseFloat((valorRecebido + valorAReceber).toFixed(2));
             const adiantamento = parseFloat(valorRecebido.toFixed(2));
             const saldo = parseFloat(valorAReceber.toFixed(2));
 
             return {
               diaViagem,
-              transportadora: cliente.trim(),
+              transportadora: encontrarTransportadoraOficial(cliente),
               valorFrete,
               adiantamento,
               cte,
@@ -595,7 +739,10 @@
               motorista: '',
               envelope: '',
               nfe: '',
-              codigoRastreio: ''
+              codigoRastreio: '',
+              dataRecebimentoEnvelope: '',
+              dataDigitalizacao: '',
+              dataEnvioCliente: ''
             };
           }).filter(d => d.diaViagem && d.transportadora && (d.valorFrete > 0));
 
@@ -624,13 +771,16 @@
         <thead class="bg-gray-100">
           <tr>
             <th class="border px-2 py-1">Data</th>
-            <th class="border px-2 py-1">Transportadora</th>
+            <th class="border px-2 py-1">Transp.</th>
             <th class="border px-2 py-1">CTe</th>
             <th class="border px-2 py-1 text-right">Frete</th>
             <th class="border px-2 py-1 text-right">Adiant.</th>
             <th class="border px-2 py-1 text-right">Saldo</th>
             <th class="border px-2 py-1">Motorista</th>
             <th class="border px-2 py-1">Envelope</th>
+            <th class="border px-2 py-1 text-xs">Receb. Env.</th>
+            <th class="border px-2 py-1 text-xs">Digitaliz.</th>
+            <th class="border px-2 py-1 text-xs">Env. Cliente</th>
             <th class="border px-2 py-1">Ações</th>
           </tr>
         </thead>
@@ -659,6 +809,15 @@
               ${envelopes.map(e => `<option value="${e}" ${d.envelope===e?'selected':''}>${e}</option>`).join('')}
             </select>
           </td>
+          <td class="border px-2 py-1">
+            <input type="date" class="date-input text-xs border rounded p-1 w-full" data-index="${i}" data-field="dataRecebimentoEnvelope" value="${d.dataRecebimentoEnvelope}">
+          </td>
+          <td class="border px-2 py-1">
+            <input type="date" class="date-input text-xs border rounded p-1 w-full" data-index="${i}" data-field="dataDigitalizacao" value="${d.dataDigitalizacao}">
+          </td>
+          <td class="border px-2 py-1">
+            <input type="date" class="date-input text-xs border rounded p-1 w-full" data-index="${i}" data-field="dataEnvioCliente" value="${d.dataEnvioCliente}">
+          </td>
           <td class="border px-2 py-1 text-center">
             <button class="text-red-600 text-xs remover-linha" data-index="${i}">X</button>
           </td>
@@ -678,6 +837,13 @@
           dadosImportados[idx].envelope = e.target.value;
         });
       });
+      table.querySelectorAll('.date-input').forEach(input => {
+        input.addEventListener('change', (e) => {
+          const idx = e.target.dataset.index;
+          const field = e.target.dataset.field;
+          dadosImportados[idx][field] = e.target.value;
+        });
+      });
       table.querySelectorAll('.remover-linha').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const idx = parseInt(e.target.dataset.index);
@@ -693,9 +859,9 @@
       const senha = prompt('Digite a senha para importar:');
       if (senha !== senhaMestra) return alert('Senha incorreta!');
 
-      const invalidos = dadosImportados.filter(d => !d.motorista || !d.envelope);
+      const invalidos = dadosImportados.filter(d => !d.motorista || !d.envelope || !d.transportadora);
       if (invalidos.length > 0) {
-        if (!confirm(`Existem ${invalidos.length} registros sem motorista ou envelope. Deseja salvar mesmo assim?`)) return;
+        if (!confirm(`Faltam dados em ${invalidos.length} registros (motorista, envelope ou transportadora). Continuar?`)) return;
       }
 
       try {
