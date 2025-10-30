@@ -3,119 +3,876 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Cadastro de Motoristas, Transportadoras e Envelopes</title>
+  <title>Controle de Saldos (Califórnia Transportes)</title>
   <link rel="icon" href="https://californiatransportes.github.io/saldos/controle/california.ico" type="image/x-icon">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Datepicker (Flatpickr) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+  <style>
+    .actions-menu {
+      min-width: 180px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      top: 100%;
+      right: 0;
+    }
+    .actions-menu button, .actions-menu a {
+      display: block;
+      width: 100%;
+      padding: 8px 12px;
+      text-align: left;
+      font-size: 0.875rem;
+    }
+    .modal-bg { background: rgba(0,0,0,0.5); }
+    .acoes-col { width: 1%; white-space: nowrap; }
+    .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .max-w-28 { max-width: 7rem; }
+    .max-w-24 { max-width: 6rem; }
+    .flatpickr-input { @apply border p-2 rounded text-sm w-32; }
+  </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
-
-  <div class="max-w-4xl mx-auto p-4">
+  <div class="max-w-7xl mx-auto p-4">
+    <!-- HEADER -->
     <header class="flex items-center gap-4 mb-6">
-      <img src="https://i.ibb.co/ksSbDJKH/33fbdb6f-b2d9-44c4-963e-c559e83d6766.png" alt="logo" class="w-16 h-16 object-contain">
+      <img src="https://i.ibb.co/ksSbDJKH/33fbdb6f-b2d9-44c4-963e-c559e83d6766.png" alt="logo" class="w-20 h-20 object-contain">
       <div>
-        <h1 class="text-2xl font-bold">Cadastro de Motoristas, Transportadoras e Envelopes</h1>
-        <p class="text-sm text-gray-600">Gerencie os cadastros</p>
+        <h1 class="text-2xl font-bold">Controle de Saldos — Califórnia Transportes</h1>
+        <p class="text-sm text-gray-600">Painel de Saldos - Desenvolvido by Je4nGomes</p>
+        <p class="text-xs text-blue-600 mt-1">
+          <a href="https://californiatransportes.github.io/saldos/cadastro.html" target="_blank" class="underline">Cadastrar Motoristas, Transportadoras e Envelopes</a>
+        </p>
       </div>
     </header>
 
-    <section class="bg-white p-6 rounded-lg shadow shadow-lg mb-6">
-      <form id="formCadastro" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium mb-1">Tipo</label>
-          <select name="tipo" required class="border p-2 rounded w-full">
-            <option value="">Selecione...</option>
-            <option value="motorista">Motorista</option>
-            <option value="transportadora">Transportadora</option>
-            <option value="envelope">Envelope</option>
-          </select>
+    <!-- CARDS -->
+    <section class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white p-4 rounded-lg shadow">
+        <p class="text-sm text-gray-500">Saldo Total</p>
+        <p id="card-saldo" class="text-2xl font-bold text-red-600">R$ 0,00</p>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow">
+        <p class="text-sm text-gray-500">Saldos em Aberto</p>
+        <p id="card-aberto" class="text-2xl font-bold text-orange-500">0</p>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow">
+        <p class="text-sm text-gray-500">Saldos Pagos</p>
+        <p id="card-pagos" class="text-2xl font-bold text-green-600">0</p>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow">
+        <p class="text-sm text-gray-500">Registros</p>
+        <p id="card-total" class="text-2xl font-bold text-blue-600">0</p>
+      </div>
+    </section>
+
+    <!-- GRÁFICOS -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      <div class="bg-white p-3 rounded-lg shadow lg:col-span-2">
+        <canvas id="chart-saldo" height="160"></canvas>
+      </div>
+      <div class="bg-white p-3 rounded-lg shadow">
+        <canvas id="chart-status" height="160"></canvas>
+      </div>
+    </section>
+
+    <!-- FORMULÁRIO DE INSERÇÃO -->
+    <section class="bg-white p-4 rounded-lg shadow mb-6">
+      <h2 class="text-lg font-bold mb-3">Inserir Registro</h2>
+      <form id="formulario" class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <select name="motorista" required class="border p-2 rounded text-sm">
+          <option value="">Selecione Motorista</option>
+        </select>
+        <select name="transportadora" required class="border p-2 rounded text-sm">
+          <option value="">Selecione Transportadora</option>
+        </select>
+        <input type="date" name="diaViagem" required class="border p-2 rounded text-sm" />
+        <input name="cte" placeholder="CTe" class="border p-2 rounded text-sm" />
+        <input name="nfe" placeholder="NFe" class="border p-2 rounded text-sm" />
+        <select name="status" required class="border p-2 rounded text-sm">
+          <option value="">Selecione Status</option>
+          <option value="Na empresa, não enviado" style="background:#fca5a5; color:#991b1b;">Na empresa, não enviado</option>
+          <option value="Com motorista" style="background:#fdba74; color:#9a3412;">Com motorista</option>
+          <option value="Enviado para recebimento" style="background:#93c5fd; color:#1e40af;">Enviado para recebimento</option>
+          <option value="Não recebido" style="background:#d4d4d8; color:#3f3f46;">Não recebido</option>
+          <option value="Localizar" style="background:#fbbf24; color:#78350f;">Localizar</option>
+          <option value="Pago" style="background:#86efac; color:#166534;">Pago</option>
+        </select>
+        <input name="codigoRastreio" placeholder="Código de Rastreio" class="border p-2 rounded text-sm" />
+        <select name="envelope" required class="border p-2 rounded text-sm">
+          <option value="">Selecione Envelope</option>
+        </select>
+        <input type="number" name="valorFrete" placeholder="Valor Frete" step="0.01" required class="border p-2 py-1 rounded text-sm" />
+        <input type="number" name="adiantamento" placeholder="Adiantamento" step="0.01" required class="border p-2 py-1 rounded text-sm" />
+        
+        <div class="flex gap-2 col-span-2 md:col-span-1">
+          <button type="button" id="btnImportar" class="bg-purple-600 text-white p-2 rounded text-sm hover:bg-purple-700 flex-1">Importar CSV</button>
+          <button type="submit" class="bg-blue-600 text-white p-2 rounded text-sm hover:bg-blue-700 flex-1">Salvar (senha)</button>
         </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Nome/Código</label>
-          <input name="nome" placeholder="Ex: João Silva ou ENV-001" required class="border p-2 rounded w-full" />
-        </div>
-        <button type="submit" class="bg-blue-600 text-white p-2 rounded md:col-span-2 hover:bg-blue-700">Cadastrar</button>
       </form>
     </section>
 
-    <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="bg-white p-4 rounded-lg shadow">
-        <h2 class="text-lg font-bold mb-3">Motoristas</h2>
-        <ul id="listaMotoristas" class="space-y-2 text-sm max-h-64 overflow-y-auto"></ul>
-      </div>
-      <div class="bg-white p-4 rounded-lg shadow">
-        <h2 class="text-lg font-bold mb-3">Transportadoras</h2>
-        <ul id="listaTransportadoras" class="space-y-2 text-sm max-h-64 overflow-y-auto"></ul>
-      </div>
-      <div class="bg-white p-4 rounded-lg shadow">
-        <h2 class="text-lg font-bold mb-3">Envelopes</h2>
-        <ul id="listaEnvelopes" class="space-y-2 text-sm max-h-64 overflow-y-auto"></ul>
+    <!-- FILTROS -->
+    <section class="bg-white p-4 rounded-lg shadow mb-6">
+      <h2 class="text-lg font-bold mb-3">Filtros</h2>
+      <div class="flex flex-wrap gap-3 items-center">
+        <select id="filtroMotoristaSelect" class="border p-2 rounded text-sm">
+          <option value="">Todos os Motoristas</option>
+        </select>
+        <select id="filtroTransportadoraSelect" class="border p-2 rounded text-sm">
+          <option value="">Todas as Transportadoras</option>
+        </select>
+        <select id="filtroStatus" class="border p-2 rounded text-sm">
+          <option value="">Todos os Status</option>
+          <option value="Na empresa, não enviado">Na empresa</option>
+          <option value="Com motorista">Com motorista</option>
+          <option value="Enviado para recebimento">Enviado</option>
+          <option value="Não recebido">Não recebido</option>
+          <option value="Localizar">Localizar</option>
+          <option value="Pago">Pago</option>
+        </select>
+        <input id="filtroCte" placeholder="Filtrar CTe" class="border p-2 rounded text-sm" />
+        
+        <!-- FILTRO ENVELOPE COMO SELECT -->
+        <select id="filtroEnvelopeSelect" class="border p-2 rounded text-sm">
+          <option value="">Todos os Envelopes</option>
+        </select>
+
+        <!-- FILTRO DE DATA COM CALENDÁRIO -->
+        <div class="flex gap-1 items-center">
+          <input id="filtroDataInicio" type="text" placeholder="De" class="flatpickr-input" readonly />
+          <span class="text-gray-600">até</span>
+          <input id="filtroDataFim" type="text" placeholder="Até" class="flatpickr-input" readonly />
+        </div>
+
+        <button id="btnFiltrar" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">Aplicar Filtros</button>
+        <button id="btnLimparFiltros" class="bg-gray-500 text-white px-4 py-2 rounded text-sm hover:bg-gray-600">Limpar</button>
+        <button id="btnExportar" class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">Exportar .xlsx</button>
       </div>
     </section>
+
+    <!-- TABELA -->
+    <section class="bg-white p-4 rounded-lg shadow mb-6 overflow-x-auto">
+      <h2 class="text-lg font-bold mb-3">Registros</h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-xs table-auto">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="border px-1 py-1 whitespace-nowrap"><input type="checkbox" id="selectAll"></th>
+              <th class="border px-1 py-1 whitespace-nowrap max-w-28">Motorista</th>
+              <th class="border px-1 py-1 whitespace-nowrap max-w-28">Transp.</th>
+              <th class="border px-1 py-1 whitespace-nowrap">Viagem</th>
+              <th class="border px-1 py-1 whitespace-nowrap">CTe</th>
+              <th class="border px-1 py-1 whitespace-nowrap">NFe</th>
+              <th class="border px-1 py-1 whitespace-nowrap max-w-24">Status</th>
+              <th class="border px-1 py-1 whitespace-nowrap">Rastreio</th>
+              <th class="border px-1 py-1 whitespace-nowrap">Envelope</th>
+              <th class="border px-1 py-1 whitespace-nowrap text-right">Frete</th>
+              <th class="border px-1 py-1 whitespace-nowrap text-right">Adiant.</th>
+              <th class="border px-1 py-1 whitespace-nowrap text-right font-bold">Saldo</th>
+              <th class="border px-1 py-1 whitespace-nowrap text-xs">Receb. Env.</th>
+              <th class="border px-1 py-1 whitespace-nowrap text-xs">Digitaliz.</th>
+              <th class="border px-1 py-1 whitespace-nowrap text-xs">Env. Cliente</th>
+              <th class="border px-1 py-1 whitespace-nowrap">Recebido</th>
+              <th class="border px-1 py-1 acoes-col"></th>
+            </tr>
+          </thead>
+          <tbody id="lista"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MODAL DE IMPORTAÇÃO -->
+    <div id="modalImportar" class="fixed inset-0 modal-bg hidden flex items-center justify-center z-50">
+      <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl max-h-screen overflow-y-auto">
+        <h3 class="text-xl font-bold mb-4">Importar CSV de Saldos</h3>
+        <div class="mb-4">
+          <input type="file" id="inputCsv" accept=".csv" class="border p-2 rounded w-full" />
+          <p class="text-xs text-gray-500 mt-1">Selecione o arquivo .CSV exportado do sistema</p>
+        </div>
+        <div id="previewContainer" class="mb-4 hidden">
+          <h4 class="font-semibold mb-2">Pré-visualização (clique para editar):</h4>
+          <div id="previewTable" class="overflow-x-auto text-xs"></div>
+        </div>
+        <div class="flex gap-2">
+          <button id="btnProcessar" class="bg-green-600 text-white p-2 rounded flex-1 hover:bg-green-700 hidden">Salvar Todos</button>
+          <button id="btnCancelarImport" class="bg-gray-400 text-white p-2 rounded flex-1">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="text-center text-gray-500 text-xs">Desenvolvido by Je4nGomes</footer>
   </div>
 
+  <!-- SCRIPTS -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+    import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDmryG-PKAyU1at8VL7NPRAZAetsoO3sdY",
-      authDomain: "saldo-d8112.firebaseapp.com",
+      authDomain: "saldo-d8113.firebaseapp.com",
       databaseURL: "https://saldo-d8113-default-rtdb.firebaseio.com",
       projectId: "saldo-d8113",
       storageBucket: "saldo-d8113.appspot.com",
       messagingSenderId: "21759024447",
-      appId: "1:21759024447:web:55ecbcceb69d9c48f5478a"
+      appId: "1:21759024447:web:55ecbcceb69d9c48f5478a",
+      measurementId: "G-78J9NTWH8L"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const storage = getStorage(app);
+    const saldosRef = ref(db, 'saldos');
     const cadastrosRef = ref(db, 'cadastros');
 
-    const form = document.getElementById('formCadastro');
-    const listaMotoristas = document.getElementById('listaMotoristas');
-    const listaTransportadoras = document.getElementById('listaTransportadoras');
-    const listaEnvelopes = document.getElementById('listaEnvelopes');
+    const form = document.getElementById('formulario');
+    const lista = document.getElementById('lista');
+    const filtroMotoristaSelect = document.getElementById('filtroMotoristaSelect');
+    const filtroTransportadoraSelect = document.getElementById('filtroTransportadoraSelect');
+    const filtroStatus = document.getElementById('filtroStatus');
+    const filtroDataInicio = document.getElementById('filtroDataInicio');
+    const filtroDataFim = document.getElementById('filtroDataFim');
+    const filtroCte = document.getElementById('filtroCte');
+    const filtroEnvelopeSelect = document.getElementById('filtroEnvelopeSelect');
+    const btnFiltrar = document.getElementById('btnFiltrar');
+    const btnLimparFiltros = document.getElementById('btnLimparFiltros');
+    const btnExportar = document.getElementById('btnExportar');
+    const CARD_SALDO = document.getElementById('card-saldo');
+    const CARD_ABERTO = document.getElementById('card-aberto');
+    const CARD_PAGOS = document.getElementById('card-pagos');
+    const CARD_TOTAL = document.getElementById('card-total');
+
+    let chartStatus = null;
+    let chartSaldo = null;
+    let senhaAutenticada = false;
+    const senhaMestra = '35280712';
+
+    const formatarNumero = (n) => Number(n || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formatarData = (iso) => {
+      if (!iso) return '-';
+      const d = new Date(iso);
+      if (isNaN(d)) return iso;
+      return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+    };
+
+    function parseISODateLocal(isoString) {
+      if (!isoString) return null;
+      const [datePart] = isoString.split('T');
+      const [year, month, day] = datePart.split('-');
+      return new Date(year, month - 1, day);
+    }
+
+    function normalizarNome(nome) {
+      return nome.trim().toLowerCase()
+        .replace(/[^\w\s]/g, '')
+        .replace(/\s+/g, ' ');
+    }
+
+    function encontrarTransportadoraOficial(nomeCsv) {
+      const nomeNorm = normalizarNome(nomeCsv);
+      for (const oficial of transportadoras) {
+        if (normalizarNome(oficial) === nomeNorm) return oficial;
+      }
+      for (const oficial of transportadoras) {
+        if (normalizarNome(oficial).includes(nomeNorm) || nomeNorm.includes(normalizarNome(oficial))) {
+          return oficial;
+        }
+      }
+      return nomeCsv.trim();
+    }
+
+    function converterDataBrParaIso(dataBr) {
+      if (!dataBr) return null;
+      const partes = dataBr.split('/');
+      if (partes.length !== 3) return null;
+      const [dia, mes, ano] = partes;
+      if (dia.length !== 2 || mes.length !== 2 || ano.length !== 4) return null;
+      return `${ano}-${mes}-${dia}`;
+    }
+
+    let todosOsRegistros = [];
+    let dadosExportacao = [];
+    let motoristas = [];
+    let transportadoras = [];
+    let envelopes = [];
 
     onValue(cadastrosRef, (snap) => {
       const data = snap.val() || {};
-      const motoristas = [], transportadoras = [], envelopes = [];
+      motoristas = Object.values(data).filter(c => c.tipo === 'motorista').map(c => c.nome).sort();
+      transportadoras = Object.values(data).filter(c => c.tipo === 'transportadora').map(c => c.nome).sort();
+      envelopes = Object.values(data).filter(c => c.tipo === 'envelope').map(c => c.nome).sort();
+      popularSelects();
+      popularFiltrosSelect();
+    });
 
-      Object.entries(data).forEach(([key, val]) => {
-        const item = `<li class="flex justify-between items-center p-2 border-b last:border-b-0">
-          <span>${val.nome}</span>
-          <button data-key="${key}" class="text-red-600 text-xs hover:text-red-800 delete-btn">Excluir</button>
-        </li>`;
-        if (val.tipo === 'motorista') motoristas.push(item);
-        else if (val.tipo === 'transportadora') transportadoras.push(item);
-        else if (val.tipo === 'envelope') envelopes.push(item);
-      });
+    function popularSelects() {
+      const selectMotorista = form.querySelector('select[name="motorista"]');
+      selectMotorista.innerHTML = '<option value="">Selecione Motorista</option>' + motoristas.map(m => `<option value="${m}">${m}</option>`).join('');
+      const selectTransportadora = form.querySelector('select[name="transportadora"]');
+      selectTransportadora.innerHTML = '<option value="">Selecione Transportadora</option>' + transportadoras.map(t => `<option value="${t}">${t}</option>`).join('');
+      const selectEnvelope = form.querySelector('select[name="envelope"]');
+      selectEnvelope.innerHTML = '<option value="">Selecione Envelope</option>' + envelopes.map(e => `<option value="${e}">${e}</option>`).join('');
+    }
 
-      listaMotoristas.innerHTML = motoristas.length ? motoristas.join('') : '<li class="text-gray-500 p-2">Nenhum motorista cadastrado</li>';
-      listaTransportadoras.innerHTML = transportadoras.length ? transportadoras.join('') : '<li class="text-gray-500 p-2">Nenhuma transportadora cadastrada</li>';
-      listaEnvelopes.innerHTML = envelopes.length ? envelopes.join('') : '<li class="text-gray-500 p-2">Nenhum envelope cadastrado</li>';
+    function popularFiltrosSelect() {
+      filtroMotoristaSelect.innerHTML = '<option value="">Todos os Motoristas</option>' + motoristas.map(m => `<option value="${m}">${m}</option>`).join('');
+      filtroTransportadoraSelect.innerHTML = '<option value="">Todas as Transportadoras</option>' + transportadoras.map(t => `<option value="${t}">${t}</option>`).join('');
+      filtroEnvelopeSelect.innerHTML = '<option value="">Todos os Envelopes</option>' + envelopes.map(e => `<option value="${e}">${e}</option>`).join('');
+    }
+
+    flatpickr(filtroDataInicio, { locale: "pt", dateFormat: "d/m/Y", allowInput: true, clickOpens: true });
+    flatpickr(filtroDataFim, { locale: "pt", dateFormat: "d/m/Y", allowInput: true, clickOpens: true });
+
+    onValue(saldosRef, (snap) => {
+      const data = snap.val() || {};
+      todosOsRegistros = Object.entries(data).map(([key, val]) => ({ key, ...val }));
+      aplicarFiltros();
+      montarCardsCharts();
     });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const senha = prompt('Digite a senha para salvar:');
+      if (senha !== senhaMestra) return alert('Senha incorreta!');
       const dados = Object.fromEntries(new FormData(form).entries());
-      if (!dados.tipo || !dados.nome) {
-        alert('Preencha todos os campos!');
-        return;
+      dados.valorFrete = parseFloat(dados.valorFrete || 0);
+      dados.adiantamento = parseFloat(dados.adiantamento || 0);
+      dados.saldo = parseFloat((dados.valorFrete - dados.adiantamento).toFixed(2));
+      dados.dataInsercao = new Date().toISOString();
+      if (dados.status === 'Enviado para recebimento') {
+        dados.dataEnvio = new Date().toISOString();
       }
-      await push(cadastrosRef, dados);
+      await push(saldosRef, dados);
       form.reset();
-      alert('Cadastrado com sucesso!');
+      alert('Registro salvo com sucesso!');
+    });
+
+    btnFiltrar.addEventListener('click', aplicarFiltros);
+    btnLimparFiltros.addEventListener('click', () => {
+      filtroMotoristaSelect.value = '';
+      filtroTransportadoraSelect.value = '';
+      filtroStatus.value = '';
+      filtroCte.value = '';
+      filtroEnvelopeSelect.value = '';
+      filtroDataInicio.value = '';
+      filtroDataFim.value = '';
+      aplicarFiltros();
+    });
+
+    function aplicarFiltros() {
+      lista.innerHTML = '';
+      dadosExportacao = [];
+
+      const fM = filtroMotoristaSelect.value;
+      const fT = filtroTransportadoraSelect.value;
+      const fS = filtroStatus.value;
+      const fC = filtroCte.value.toLowerCase().trim();
+      const fE = filtroEnvelopeSelect.value;
+      const dataInicioIso = filtroDataInicio.value ? converterDataBrParaIso(filtroDataInicio.value) : null;
+      const dataFimIso = filtroDataFim.value ? converterDataBrParaIso(filtroDataFim.value) : null;
+
+      let filtrados = todosOsRegistros.filter(v => {
+        const matchMotorista = !fM || v.motorista === fM;
+        const matchTransportadora = !fT || v.transportadora === fT;
+        const matchStatus = !fS || v.status === fS;
+        const matchCte = !fC || (v.cte || '').toLowerCase().includes(fC);
+        const matchEnvelope = !fE || v.envelope === fE;
+
+        let matchData = true;
+        if (dataInicioIso || dataFimIso) {
+          const dataViagem = v.diaViagem;
+          if (!dataViagem) return false;
+          if (dataInicioIso && dataViagem < dataInicioIso) return false;
+          if (dataFimIso && dataViagem > dataFimIso) return false;
+        }
+
+        return matchMotorista && matchTransportadora && matchStatus && matchCte && matchEnvelope && matchData;
+      });
+
+      filtrados.sort((a, b) => (a.saldo > 0 ? 0 : 1) - (b.saldo > 0 ? 0 : 1));
+      filtrados.forEach(r => renderizarLinha(r));
+    }
+
+    function renderizarLinha(val) {
+      const tr = document.createElement('tr');
+      const bgColor = {
+        'Na empresa, não enviado': 'bg-red-50',
+        'Com motorista': 'bg-orange-50',
+        'Enviado para recebimento': 'bg-blue-50',
+        'Não recebido': 'bg-zinc-50',
+        'Localizar': 'bg-amber-50',
+        'Pago': 'bg-green-50'
+      }[val.status] || 'bg-gray-50';
+
+      const statusColor = {
+        'Na empresa, não enviado': 'text-red-600',
+        'Com motorista': 'text-orange-600',
+        'Enviado para recebimento': 'text-blue-600',
+        'Não recebido': 'text-zinc-700',
+        'Localizar': 'text-amber-700',
+        'Pago': 'text-green-600'
+      }[val.status] || 'text-gray-700';
+
+      const statusAbrev = val.status === 'Na empresa, não enviado' ? 'Na empresa' :
+                         val.status === 'Com motorista' ? 'Com mot.' :
+                         val.status === 'Enviado para recebimento' ? 'Enviado' :
+                         val.status === 'Não recebido' ? 'Não rec.' :
+                         val.status === 'Localizar' ? 'Localizar' :
+                         val.status === 'Pago' ? 'Pago' : val.status;
+
+      const truncar = (texto, max) => !texto ? '-' : texto.length > max ? texto.substring(0, max - 3) + '...' : texto;
+      const motorista = truncar(val.motorista, 15);
+      const transportadora = truncar(val.transportadora, 12);
+
+      tr.className = bgColor;
+      tr.innerHTML = `
+        <td class="border px-1 py-1 text-center"><input type="checkbox" class="rowCheck" data-saldo="${val.saldo || 0}" data-key="${val.key}"></td>
+        <td class="border px-1 py-1 whitespace-nowrap max-w-28 truncate" title="${val.motorista || ''}">${motorista}</td>
+        <td class="border px-1 py-1 whitespace-nowrap max-w-28 truncate" title="${val.transportadora || ''}">${transportadora}</td>
+        <td class="border px-1 py-1 whitespace-nowrap">${val.diaViagem ? parseISODateLocal(val.diaViagem).toLocaleDateString('pt-BR') : '-'}</td>
+        <td class="border px-1 py-1 whitespace-nowrap">${val.cte || '-'}</td>
+        <td class="border px-1 py-1 whitespace-nowrap">${val.nfe || '-'}</td>
+        <td class="border px-1 py-1 whitespace-nowrap max-w-24 ${statusColor} font-medium" title="${val.status || ''}">${statusAbrev}</td>
+        <td class="border px-1 py-1 whitespace-nowrap">${val.codigoRastreio || '-'}</td>
+        <td class="border px-1 py-1 whitespace-nowrap">${val.envelope || '-'}</td>
+        <td class="border px-1 py-1 whitespace-nowrap text-right">R$ ${formatarNumero(val.valorFrete)}</td>
+        <td class="border px-1 py-1 whitespace-nowrap text-right">R$ ${formatarNumero(val.adiantamento)}</td>
+        <td class="border px-1 py-1 whitespace-nowrap text-right font-bold">R$ ${formatarNumero(val.saldo)}</td>
+        <td class="border px-1 py-1 whitespace-nowrap text-xs">${formatarData(val.dataRecebimentoEnvelope)}</td>
+        <td class="border px-1 py-1 whitespace-nowrap text-xs">${formatarData(val.dataDigitalizacao)}</td>
+        <td class="border px-1 py-1 whitespace-nowrap text-xs">${formatarData(val.dataEnvioCliente)}</td>
+        <td class="border px-1 py-1 whitespace-nowrap">${val.dataRecebimento ? formatarData(val.dataRecebimento) : '-'}</td>
+        <td class="border px-1 py-1 acoes-col align-middle">
+          <div class="relative">
+            <button data-key="${val.key}" class="actions-btn bg-gray-600 hover:bg-gray-700 text-white px-2 py-0.5 rounded text-xs">Ações</button>
+            <div id="actions-menu-${val.key}" class="actions-menu hidden absolute bg-white border rounded shadow-lg z-50 top-full right-0 mt-1">
+              ${val.pdfUrl
+                ? `<a href="${val.pdfUrl}" target="_blank" class="text-blue-600 hover:bg-gray-100 block px-3 py-1 text-xs">Ver PDF</a>`
+                : `<button data-key="${val.key}" class="upload-btn text-blue-600 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Anexar PDF</button>`
+              }
+              <button data-key="${val.key}" class="delete-btn text-red-600 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Excluir</button>
+              ${val.saldo > 0 ? `<button data-key="${val.key}" class="mark-recebido-btn text-green-600 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Marcar como Recebido</button>` : ''}
+              <button data-key="${val.key}" class="edit-btn text-yellow-700 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Editar</button>
+            </div>
+          </div>
+        </td>
+      `;
+      lista.appendChild(tr);
+      dadosExportacao.push({
+        Motorista: val.motorista || '',
+        Transportadora: val.transportadora || '',
+        DiaViagem: val.diaViagem || '',
+        CTe: val.cte || '',
+        NFe: val.nfe || '',
+        Status: val.status || '',
+        CodigoRastreio: val.codigoRastreio || '',
+        Envelope: val.envelope || '',
+        Frete: formatarNumero(val.valorFrete),
+        Adiantamento: formatarNumero(val.adiantamento),
+        Saldo: formatarNumero(val.saldo),
+        DataRecebimentoEnvelope: val.dataRecebimentoEnvelope || '',
+        DataDigitalizacao: val.dataDigitalizacao || '',
+        DataEnvioCliente: val.dataEnvioCliente || '',
+        DataRecebimento: val.dataRecebimento || '',
+        DataInsercao: val.dataInsercao || '',
+        PDF: val.pdfUrl || ''
+      });
+    }
+
+    btnExportar.addEventListener('click', () => {
+      const ws = XLSX.utils.json_to_sheet(dadosExportacao);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Saldos');
+      XLSX.writeFile(wb, `saldos_${new Date().toISOString().slice(0,10)}.xlsx`);
     });
 
     document.addEventListener('click', async (e) => {
-      if (e.target.classList.contains('delete-btn')) {
-        const key = e.target.getAttribute('data-key');
-        if (confirm('Excluir este cadastro?')) {
-          await remove(ref(db, `cadastros/${key}`));
-          alert('Excluído com sucesso!');
+      const key = e.target.getAttribute('data-key');
+      if (!key) return;
+
+      if (e.target.classList.contains('actions-btn')) {
+        if (!senhaAutenticada) {
+          const senha = prompt('Digite a senha para ações:');
+          if (senha !== senhaMestra) return alert('Senha incorreta!');
+          senhaAutenticada = true;
         }
+        const menu = document.getElementById(`actions-menu-${key}`);
+        menu.classList.toggle('hidden');
+      }
+
+      if (e.target.classList.contains('upload-btn')) {
+        const input = document.createElement('input');
+        input.type = 'file'; input.accept = 'application/pdf'; input.style.display = 'none';
+        document.body.appendChild(input); input.click();
+        input.addEventListener('change', async () => {
+          const file = input.files[0];
+          if (file) {
+            const fileRef = storageRef(storage, `pdfs/${key}.pdf`);
+            await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(fileRef);
+            await update(ref(db, `saldos/${key}`), { pdfUrl: url });
+            alert('PDF anexado com sucesso!');
+          }
+          document.body.removeChild(input);
+        });
+      }
+
+      if (e.target.classList.contains('delete-btn') && confirm('Excluir este registro?')) {
+        await remove(ref(db, `saldos/${key}`));
+      }
+
+      if (e.target.classList.contains('mark-recebido-btn')) {
+        let data = prompt('Data de recebimento (ou deixe em branco para agora):');
+        if (data === null) return;
+        if (!data.trim()) data = new Date().toISOString();
+        await update(ref(db, `saldos/${key}`), { saldo: 0, dataRecebimento: data, status: 'Pago' });
+      }
+
+      if (e.target.classList.contains('edit-btn')) {
+        const reg = todosOsRegistros.find(r => r.key === key);
+        if (!reg) return;
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 modal-bg flex items-center justify-center z-50';
+        modal.innerHTML = `
+          <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
+            <h3 class="text-xl font-bold mb-4">Editar Registro</h3>
+            <form id="form-edit-${key}" class="grid grid-cols-2 gap-3 text-sm">
+              <select name="motorista" class="border p-2 rounded" required>
+                <option value="">Selecione Motorista</option>
+                ${motoristas.map(m => `<option value="${m}" ${reg.motorista===m?'selected':''}>${m}</option>`).join('')}
+              </select>
+              <select name="transportadora" class="border p-2 rounded" required>
+                <option value="">Selecione Transportadora</option>
+                ${transportadoras.map(t => `<option value="${t}" ${reg.transportadora===t?'selected':''}>${t}</option>`).join('')}
+              </select>
+              <input type="date" name="diaViagem" value="${reg.diaViagem||''}" class="border p-2 rounded" required />
+              <input name="cte" value="${reg.cte||''}" class="border p-2 rounded" />
+              <input name="nfe" value="${reg.nfe||''}" class="border p-2 rounded" />
+              <select name="status" class="border p-2 rounded" required>
+                <option value="Na empresa, não enviado" ${reg.status==='Na empresa, não enviado'?'selected':''} style="background:#fca5a5;color:#991b1b;">Na empresa, não enviado</option>
+                <option value="Com motorista" ${reg.status==='Com motorista'?'selected':''} style="background:#fdba74;color:#9a3412;">Com motorista</option>
+                <option value="Enviado para recebimento" ${reg.status==='Enviado para recebimento'?'selected':''} style="background:#93c5fd;color:#1e40af;">Enviado para recebimento</option>
+                <option value="Não recebido" ${reg.status==='Não recebido'?'selected':''} style="background:#d4d4d8;color:#3f3f46;">Não recebido</option>
+                <option value="Localizar" ${reg.status==='Localizar'?'selected':''} style="background:#fbbf24;color:#78350f;">Localizar</option>
+                <option value="Pago" ${reg.status==='Pago'?'selected':''} style="background:#86efac;color:#166534;">Pago</option>
+              </select>
+              <input name="codigoRastreio" value="${reg.codigoRastreio||''}" class="border p-2 rounded" />
+              <select name="envelope" class="border p-2 rounded">
+                <option value="">Selecione Envelope</option>
+                ${envelopes.map(e => `<option value="${e}" ${reg.envelope===e?'selected':''}>${e}</option>`).join('')}
+              </select>
+              <input type="number" name="valorFrete" value="${reg.valorFrete||0}" step="0.01" class="border p-2 rounded" required />
+              <input type="number" name="adiantamento" value="${reg.adiantamento||0}" step="0.01" class="border p-2 rounded" required />
+              <input type="date" name="dataRecebimentoEnvelope" value="${reg.dataRecebimentoEnvelope||''}" class="border p-2 rounded col-span-2" placeholder="Receb. Envelope" />
+              <input type="date" name="dataDigitalizacao" value="${reg.dataDigitalizacao||''}" class="border p-2 rounded" placeholder="Digitalização" />
+              <input type="date" name="dataEnvioCliente" value="${reg.dataEnvioCliente||''}" class="border p-2 rounded" placeholder="Envio Cliente" />
+              <div class="col-span-2 flex gap-2">
+                <button type="submit" class="bg-blue-600 text-white p-2 rounded flex-1">Salvar</button>
+                <button type="button" id="cancel-${key}" class="bg-gray-400 text-white p-2 rounded flex-1">Cancelar</button>
+              </div>
+            </form>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        document.getElementById(`cancel-${key}`).onclick = () => modal.remove();
+        document.getElementById(`form-edit-${key}`).addEventListener('submit', async (ev) => {
+          ev.preventDefault();
+          const dados = Object.fromEntries(new FormData(ev.target).entries());
+          dados.valorFrete = parseFloat(dados.valorFrete || 0);
+          dados.adiantamento = parseFloat(dados.adiantamento || 0);
+          dados.saldo = parseFloat((dados.valorFrete - dados.adiantamento).toFixed(2));
+          if (dados.status === 'Enviado para recebimento') dados.dataEnvio = new Date().toISOString();
+          await update(ref(db, `saldos/${key}`), dados);
+          modal.remove();
+        });
+      }
+    });
+
+    function montarCardsCharts() {
+      CARD_TOTAL.textContent = todosOsRegistros.length;
+      const totais = todosOsRegistros.reduce((acc, r) => {
+        acc.saldoTotal += Number(r.saldo || 0);
+        if (Number(r.saldo || 0) > 0) acc.aberto++;
+        else acc.pago++;
+        return acc;
+      }, { saldoTotal: 0, aberto: 0, pago: 0 });
+      CARD_SALDO.textContent = `R$ ${formatarNumero(totais.saldoTotal)}`;
+      CARD_ABERTO.textContent = totais.aberto;
+      CARD_PAGOS.textContent = totais.pago;
+
+      const statusCount = {};
+      todosOsRegistros.forEach(r => {
+        const s = r.status || 'Outro';
+        statusCount[s] = (statusCount[s] || 0) + 1;
+      });
+
+      const statusOrder = ['Na empresa, não enviado', 'Com motorista', 'Enviado para recebimento', 'Não recebido', 'Localizar', 'Pago', 'Outro'];
+      const labels = statusOrder.filter(s => statusCount[s]);
+      const dataValues = labels.map(s => statusCount[s]);
+      const colors = {
+        'Na empresa, não enviado': '#ef4444',
+        'Com motorista': '#f97316',
+        'Enviado para recebimento': '#3b82f6',
+        'Não recebido': '#71717a',
+        'Localizar': '#f59e0b',
+        'Pago': '#22c55e',
+        'Outro': '#6b7280'
+      };
+      const backgroundColors = labels.map(s => colors[s]);
+
+      const ctxStatus = document.getElementById('chart-status').getContext('2d');
+      if (chartStatus) chartStatus.destroy();
+      chartStatus = new Chart(ctxStatus, {
+        type: 'pie',
+        data: { labels, datasets: [{ data: dataValues, backgroundColor: backgroundColors }] },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+      });
+
+      const ctxSaldo = document.getElementById('chart-saldo').getContext('2d');
+      if (chartSaldo) chartSaldo.destroy();
+      const porMes = {};
+      todosOsRegistros.forEach(r => {
+        if (!r.diaViagem) return;
+        const mesAno = r.diaViagem.substring(0, 7);
+        porMes[mesAno] = (porMes[mesAno] || 0) + Number(r.saldo || 0);
+      });
+      const mesesOrdenados = Object.keys(porMes).sort();
+      const labelsSaldo = mesesOrdenados.map(m => {
+        const [ano, mes] = m.split('-');
+        const data = new Date(ano, mes - 1);
+        return data.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+      });
+      const valores = mesesOrdenados.map(m => porMes[m]);
+      chartSaldo = new Chart(ctxSaldo, {
+        type: 'bar',
+        data: { labels: labelsSaldo, datasets: [{ label: 'Saldo em Aberto', data: valores, backgroundColor: '#dc2626', borderColor: '#b91c1c', borderWidth: 1 }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+      });
+    }
+
+    lista.addEventListener('change', (e) => {
+      if (e.target.classList.contains('rowCheck')) {
+        let total = 0;
+        document.querySelectorAll('.rowCheck:checked').forEach(c => total += parseFloat(c.dataset.saldo || 0));
+        CARD_SALDO.textContent = `R$ ${formatarNumero(total)}`;
+      }
+    });
+
+    document.getElementById('selectAll').addEventListener('change', (e) => {
+      document.querySelectorAll('.rowCheck').forEach(c => c.checked = e.target.checked);
+      const total = e.target.checked ? todosOsRegistros.reduce((a,r) => a + Number(r.saldo||0), 0) : 0;
+      CARD_SALDO.textContent = `R$ ${formatarNumero(total)}`;
+    });
+
+    montarCardsCharts();
+
+    // === IMPORTAÇÃO DE CSV ===
+    const btnImportar = document.getElementById('btnImportar');
+    const modalImportar = document.getElementById('modalImportar');
+    const inputCsv = document.getElementById('inputCsv');
+    const previewContainer = document.getElementById('previewContainer');
+    const previewTable = document.getElementById('previewTable');
+    const btnProcessar = document.getElementById('btnProcessar');
+    const btnCancelarImport = document.getElementById('btnCancelarImport');
+    let dadosImportados = [];
+
+    btnImportar.addEventListener('click', () => {
+      modalImportar.classList.remove('hidden');
+      inputCsv.value = '';
+      previewContainer.classList.add('hidden');
+      dadosImportados = [];
+    });
+
+    btnCancelarImport.addEventListener('click', () => {
+      modalImportar.classList.add('hidden');
+    });
+
+    inputCsv.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        try {
+          const data = ev.target.result;
+          const workbook = XLSX.read(data, { type: 'binary' });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+          const json = XLSX.utils.sheet_to_json(sheet, { raw: false, defval: '' });
+
+          dadosImportados = json.map(row => {
+            const dataStr = row['Data'] || '';
+            const cliente = row['Cliente'] || '';
+            const valorRecebido = parseFloat((row['ValorRecebido'] || '0').replace(',', '.')) || 0;
+            const valorAReceber = parseFloat((row['ValorAReceber'] || '0').replace(',', '.')) || 0;
+            const hist = row['Hist'] || '';
+            const cteMatch = hist.match(/CTe:\s*(\d+)/i);
+            const cte = cteMatch ? cteMatch[1] : '';
+
+            let diaViagem = '';
+            if (dataStr) {
+              const partes = dataStr.split('/');
+              if (partes.length === 3) {
+                diaViagem = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+              }
+            }
+
+            const valorFrete = parseFloat((valorRecebido + valorAReceber).toFixed(2));
+            const adiantamento = parseFloat(valorRecebido.toFixed(2));
+            const saldo = parseFloat(valorAReceber.toFixed(2));
+
+            return {
+              diaViagem,
+              transportadora: encontrarTransportadoraOficial(cliente),
+              valorFrete,
+              adiantamento,
+              cte,
+              saldo,
+              status: 'Enviado para recebimento',
+              dataEnvio: new Date().toISOString(),
+              motorista: '',
+              envelope: '',
+              nfe: '',
+              codigoRastreio: '',
+              dataRecebimentoEnvelope: '',
+              dataDigitalizacao: '',
+              dataEnvioCliente: ''
+            };
+          }).filter(d => d.diaViagem && d.transportadora && (d.valorFrete > 0));
+
+          renderizarPreview();
+          previewContainer.classList.remove('hidden');
+          btnProcessar.classList.remove('hidden');
+        } catch (err) {
+          console.error("Erro ao processar CSV:", err);
+          alert('Erro ao ler o CSV. Verifique o formato (use ; como separador e cabeçalhos corretos).');
+        }
+      };
+
+      reader.readAsBinaryString(file);
+    });
+
+    function renderizarPreview() {
+      previewTable.innerHTML = '';
+      if (dadosImportados.length === 0) {
+        previewTable.innerHTML = '<p class="text-gray-500">Nenhum dado válido encontrado.</p>';
+        return;
+      }
+
+      const table = document.createElement('table');
+      table.className = 'min-w-full text-xs table-auto border';
+      table.innerHTML = `
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="border px-2 py-1">Data</th>
+            <th class="border px-2 py-1">Transp.</th>
+            <th class="border px-2 py-1">CTe</th>
+            <th class="border px-2 py-1 text-right">Frete</th>
+            <th class="border px-2 py-1 text-right">Adiant.</th>
+            <th class="border px-2 py-1 text-right">Saldo</th>
+            <th class="border px-2 py-1">Motorista</th>
+            <th class="border px-2 py-1">Envelope</th>
+            <th class="border px-2 py-1 text-xs">Receb. Env.</th>
+            <th class="border px-2 py-1 text-xs">Digitaliz.</th>
+            <th class="border px-2 py-1 text-xs">Env. Cliente</th>
+            <th class="border px-2 py-1">Ações</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+
+      const tbody = table.querySelector('tbody');
+      dadosImportados.forEach((d, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="border px-2 py-1">${d.diaViagem.split('-').reverse().join('/')}</td>
+          <td class="border px-2 py-1 truncate max-w-32" title="${d.transportadora}">${d.transportadora}</td>
+          <td class="border px-2 py-1">${d.cte || '-'}</td>
+          <td class="border px-2 py-1 text-right">R$ ${formatarNumero(d.valorFrete)}</td>
+          <td class="border px-2 py-1 text-right">R$ ${formatarNumero(d.adiantamento)}</td>
+          <td class="border px-2 py-1 text-right font-bold">R$ ${formatarNumero(d.saldo)}</td>
+          <td class="border px-2 py-1">
+            <select class="motorista-select text-xs border rounded p-1 w-full" data-index="${i}">
+              <option value="">Selecione</option>
+              ${motoristas.map(m => `<option value="${m}" ${d.motorista===m?'selected':''}>${m}</option>`).join('')}
+            </select>
+          </td>
+          <td class="border px-2 py-1">
+            <select class="envelope-select text-xs border rounded p-1 w-full" data-index="${i}">
+              <option value="">Selecione</option>
+              ${envelopes.map(e => `<option value="${e}" ${d.envelope===e?'selected':''}>${e}</option>`).join('')}
+            </select>
+          </td>
+          <td class="border px-2 py-1">
+            <input type="date" class="date-input text-xs border rounded p-1 w-full" data-index="${i}" data-field="dataRecebimentoEnvelope" value="${d.dataRecebimentoEnvelope}">
+          </td>
+          <td class="border px-2 py-1">
+            <input type="date" class="date-input text-xs border rounded p-1 w-full" data-index="${i}" data-field="dataDigitalizacao" value="${d.dataDigitalizacao}">
+          </td>
+          <td class="border px-2 py-1">
+            <input type="date" class="date-input text-xs border rounded p-1 w-full" data-index="${i}" data-field="dataEnvioCliente" value="${d.dataEnvioCliente}">
+          </td>
+          <td class="border px-2 py-1 text-center">
+            <button class="text-red-600 text-xs remover-linha" data-index="${i}">X</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      table.querySelectorAll('.motorista-select').forEach(sel => {
+        sel.addEventListener('change', (e) => {
+          const idx = e.target.dataset.index;
+          dadosImportados[idx].motorista = e.target.value;
+        });
+      });
+      table.querySelectorAll('.envelope-select').forEach(sel => {
+        sel.addEventListener('change', (e) => {
+          const idx = e.target.dataset.index;
+          dadosImportados[idx].envelope = e.target.value;
+        });
+      });
+      table.querySelectorAll('.date-input').forEach(input => {
+        input.addEventListener('change', (e) => {
+          const idx = e.target.dataset.index;
+          const field = e.target.dataset.field;
+          dadosImportados[idx][field] = e.target.value;
+        });
+      });
+      table.querySelectorAll('.remover-linha').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const idx = parseInt(e.target.dataset.index);
+          dadosImportados.splice(idx, 1);
+          renderizarPreview();
+        });
+      });
+
+      previewTable.appendChild(table);
+    }
+
+    btnProcessar.addEventListener('click', async () => {
+      const senha = prompt('Digite a senha para importar:');
+      if (senha !== senhaMestra) return alert('Senha incorreta!');
+
+      const invalidos = dadosImportados.filter(d => !d.motorista || !d.envelope || !d.transportadora);
+      if (invalidos.length > 0) {
+        if (!confirm(`Faltam dados em ${invalidos.length} registros (motorista, envelope ou transportadora). Continuar?`)) return;
+      }
+
+      try {
+        for (const dados of dadosImportados) {
+          await push(saldosRef, dados);
+        }
+        alert(`Importação concluída! ${dadosImportados.length} registros salvos.`);
+        modalImportar.classList.add('hidden');
+        dadosImportados = [];
+      } catch (err) {
+        alert('Erro ao salvar: ' + err.message);
       }
     });
   </script>
