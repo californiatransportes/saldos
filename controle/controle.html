@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -116,44 +117,47 @@
       </form>
     </section>
 
-    <!-- FILTROS -->
-    <section class="bg-white p-4 rounded-lg shadow mb-6">
-      <h2 class="text-lg font-bold mb-3">Filtros</h2>
-      <div class="flex flex-wrap gap-3 items-center">
-        <select id="filtroMotoristaSelect" class="border p-2 rounded text-sm">
-          <option value="">Todos os Motoristas</option>
-        </select>
-        <select id="filtroTransportadoraSelect" class="border p-2 rounded text-sm">
-          <option value="">Todas as Transportadoras</option>
-        </select>
-        <select id="filtroStatus" class="border p-2 rounded text-sm">
-          <option value="">Todos os Status</option>
-          <option value="Na empresa, não enviado">Na empresa</option>
-          <option value="Com motorista">Com motorista</option>
-          <option value="Enviado para recebimento">Enviado</option>
-          <option value="Não recebido">Não recebido</option>
-          <option value="Localizar">Localizar</option>
-          <option value="Pago">Pago</option>
-        </select>
-        <input id="filtroCte" placeholder="Filtrar CTe" class="border p-2 rounded text-sm" />
-        
-        <!-- FILTRO ENVELOPE COMO SELECT -->
-        <select id="filtroEnvelopeSelect" class="border p-2 rounded text-sm">
-          <option value="">Todos os Envelopes</option>
-        </select>
+<!-- FILTROS -->
+<section class="bg-white p-4 rounded-lg shadow mb-6">
+  <h2 class="text-lg font-bold mb-3">Filtros</h2>
+  <div class="flex flex-wrap gap-3 items-center">
+    <select id="filtroMotoristaSelect" class="border p-2 rounded text-sm">
+      <option value="">Todos os Motoristas</option>
+    </select>
+    <select id="filtroTransportadoraSelect" class="border p-2 rounded text-sm">
+      <option value="">Todas as Transportadoras</option>
+    </select>
+    <select id="filtroStatus" class="border p-2 rounded text-sm">
+      <option value="">Todos os Status</option>
+      <option value="Na empresa, não enviado">Na empresa</option>
+      <option value="Com motorista">Com motorista</option>
+      <option value="Enviado para recebimento">Enviado</option>
+      <option value="Não recebido">Não recebido</option>
+      <option value="Localizar">Localizar</option>
+      <option value="Pago">Pago</option>
+    </select>
+    <input id="filtroCte" placeholder="Filtrar CTe" class="border p-2 rounded text-sm" />
+    
+    <!-- NOVO FILTRO: CÓDIGO DE RASTREIO -->
+    <input id="filtroCodigoRastreio" placeholder="Filtrar Rastreio" class="border p-2 rounded text-sm" />
 
-        <!-- FILTRO DE DATA COM CALENDÁRIO -->
-        <div class="flex gap-1 items-center">
-          <input id="filtroDataInicio" type="text" placeholder="De" class="flatpickr-input" readonly />
-          <span class="text-gray-600">até</span>
-          <input id="filtroDataFim" type="text" placeholder="Até" class="flatpickr-input" readonly />
-        </div>
+    <!-- FILTRO ENVELOPE COMO SELECT -->
+    <select id="filtroEnvelopeSelect" class="border p-2 rounded text-sm">
+      <option value="">Todos os Envelopes</option>
+    </select>
 
-        <button id="btnFiltrar" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">Aplicar Filtros</button>
-        <button id="btnLimparFiltros" class="bg-gray-500 text-white px-4 py-2 rounded text-sm hover:bg-gray-600">Limpar</button>
-        <button id="btnExportar" class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">Exportar .xlsx</button>
-      </div>
-    </section>
+    <!-- FILTRO DE DATA COM CALENDÁRIO -->
+    <div class="flex gap-1 items-center">
+      <input id="filtroDataInicio" type="text" placeholder="De" class="flatpickr-input" readonly />
+      <span class="text-gray-600">até</span>
+      <input id="filtroDataFim" type="text" placeholder="Até" class="flatpickr-input" readonly />
+    </div>
+
+    <button id="btnFiltrar" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">Aplicar Filtros</button>
+    <button id="btnLimparFiltros" class="bg-gray-500 text-white px-4 py-2 rounded text-sm hover:bg-gray-600">Limpar</button>
+    <button id="btnExportar" class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">Exportar .xlsx</button>
+  </div>
+</section>
 
     <!-- TABELA -->
     <section class="bg-white p-4 rounded-lg shadow mb-6 overflow-x-auto">
@@ -241,6 +245,7 @@
     const filtroCte = document.getElementById('filtroCte');
     const filtroEnvelopeSelect = document.getElementById('filtroEnvelopeSelect');
     const btnFiltrar = document.getElementById('btnFiltrar');
+    const filtroCodigoRastreio = document.getElementById('filtroCodigoRastreio');
     const btnLimparFiltros = document.getElementById('btnLimparFiltros');
     const btnExportar = document.getElementById('btnExportar');
     const CARD_SALDO = document.getElementById('card-saldo');
@@ -353,51 +358,54 @@
       alert('Registro salvo com sucesso!');
     });
 
-    btnFiltrar.addEventListener('click', aplicarFiltros);
-    btnLimparFiltros.addEventListener('click', () => {
-      filtroMotoristaSelect.value = '';
-      filtroTransportadoraSelect.value = '';
-      filtroStatus.value = '';
-      filtroCte.value = '';
-      filtroEnvelopeSelect.value = '';
-      filtroDataInicio.value = '';
-      filtroDataFim.value = '';
-      aplicarFiltros();
-    });
+  btnFiltrar.addEventListener('click', aplicarFiltros);
+  btnLimparFiltros.addEventListener('click', () => {
+  filtroMotoristaSelect.value = '';
+  filtroTransportadoraSelect.value = '';
+  filtroStatus.value = '';
+  filtroCte.value = '';
+  filtroEnvelopeSelect.value = '';
+  filtroDataInicio.value = '';
+  filtroDataFim.value = '';
+  filtroCodigoRastreio.value = ''; // <--- NOVA LINHA
+  aplicarFiltros();
+});
 
-    function aplicarFiltros() {
-      lista.innerHTML = '';
-      dadosExportacao = [];
+function aplicarFiltros() {
+  lista.innerHTML = '';
+  dadosExportacao = [];
 
-      const fM = filtroMotoristaSelect.value;
-      const fT = filtroTransportadoraSelect.value;
-      const fS = filtroStatus.value;
-      const fC = filtroCte.value.toLowerCase().trim();
-      const fE = filtroEnvelopeSelect.value;
-      const dataInicioIso = filtroDataInicio.value ? converterDataBrParaIso(filtroDataInicio.value) : null;
-      const dataFimIso = filtroDataFim.value ? converterDataBrParaIso(filtroDataFim.value) : null;
+  const fM = filtroMotoristaSelect.value;
+  const fT = filtroTransportadoraSelect.value;
+  const fS = filtroStatus.value;
+  const fC = filtroCte.value.toLowerCase().trim();
+  const fE = filtroEnvelopeSelect.value;
+  const fR = filtroCodigoRastreio.value.toLowerCase().trim(); // <--- NOVA LINHA
+  const dataInicioIso = filtroDataInicio.value ? converterDataBrParaIso(filtroDataInicio.value) : null;
+  const dataFimIso = filtroDataFim.value ? converterDataBrParaIso(filtroDataFim.value) : null;
 
-      let filtrados = todosOsRegistros.filter(v => {
-        const matchMotorista = !fM || v.motorista === fM;
-        const matchTransportadora = !fT || v.transportadora === fT;
-        const matchStatus = !fS || v.status === fS;
-        const matchCte = !fC || (v.cte || '').toLowerCase().includes(fC);
-        const matchEnvelope = !fE || v.envelope === fE;
+  let filtrados = todosOsRegistros.filter(v => {
+    const matchMotorista = !fM || v.motorista === fM;
+    const matchTransportadora = !fT || v.transportadora === fT;
+    const matchStatus = !fS || v.status === fS;
+    const matchCte = !fC || (v.cte || '').toLowerCase().includes(fC);
+    const matchEnvelope = !fE || v.envelope === fE;
+    const matchRastreio = !fR || (v.codigoRastreio || '').toLowerCase().includes(fR); // <--- NOVA LINHA
+    let matchData = true;
 
-        let matchData = true;
-        if (dataInicioIso || dataFimIso) {
-          const dataViagem = v.diaViagem;
-          if (!dataViagem) return false;
-          if (dataInicioIso && dataViagem < dataInicioIso) return false;
-          if (dataFimIso && dataViagem > dataFimIso) return false;
-        }
-
-        return matchMotorista && matchTransportadora && matchStatus && matchCte && matchEnvelope && matchData;
-      });
-
-      filtrados.sort((a, b) => (a.saldo > 0 ? 0 : 1) - (b.saldo > 0 ? 0 : 1));
-      filtrados.forEach(r => renderizarLinha(r));
+    if (dataInicioIso || dataFimIso) {
+      const dataViagem = v.diaViagem;
+      if (!dataViagem) return false;
+      if (dataInicioIso && dataViagem < dataInicioIso) return false;
+      if (dataFimIso && dataViagem > dataFimIso) return false;
     }
+
+    return matchMotorista && matchTransportadora && matchStatus && matchCte && matchEnvelope && matchRastreio && matchData;
+  });
+
+  filtrados.sort((a, b) => (a.saldo > 0 ? 0 : 1) - (b.saldo > 0 ? 0 : 1));
+  filtrados.forEach(r => renderizarLinha(r));
+}
 
     function renderizarLinha(val) {
       const tr = document.createElement('tr');
