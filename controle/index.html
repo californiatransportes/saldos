@@ -13,14 +13,42 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
   <style>
-    .actions-menu { min-width: 180px; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15); top: 100%; right: 0; }
-    .actions-menu button, .actions-menu a { display: block; width: 100%; padding: 8px 12px; text-align: left; font-size: 0.875rem; }
-    .modal-bg { background: rgba(0,0,0,0.5); }
-    .acoes-col { width: 1%; white-space: nowrap; }
-    .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .max-w-28 { max-width: 7rem; }
-    .max-w-24 { max-width: 6rem; }
-    .flatpickr-input { @apply border p-2 rounded text-sm w-32; }
+    .actions-menu {
+      min-width: 180px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      top: 100%;
+      right: 0;
+    }
+    .actions-menu button, .actions-menu a {
+      display: block;
+      width: 100%;
+      padding: 8px 12px;
+      text-align: left;
+      font-size: 0.875rem;
+    }
+    .modal-bg {
+      background: rgba(0,0,0,0.5);
+    }
+    .acoes-col {
+      width: 1%;
+      white-space: nowrap;
+    }
+    .truncate {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .max-w-28 {
+      max-width: 7rem;
+    }
+    .max-w-24 {
+      max-width: 6rem;
+    }
+    .flatpickr-input {
+      @apply border p-2 rounded text-sm w-32;
+    }
   </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -36,7 +64,6 @@
         </p>
       </div>
     </header>
-
     <!-- CARDS -->
     <section class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
       <div class="bg-white p-4 rounded-lg shadow">
@@ -56,7 +83,6 @@
         <p id="card-total" class="text-2xl font-bold text-blue-600">0</p>
       </div>
     </section>
-
     <!-- GRÁFICOS -->
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
       <div class="bg-white p-3 rounded-lg shadow lg:col-span-2">
@@ -66,7 +92,6 @@
         <canvas id="chart-status" height="160"></canvas>
       </div>
     </section>
-
     <!-- FORMULÁRIO DE INSERÇÃO -->
     <section class="bg-white p-4 rounded-lg shadow mb-6">
       <h2 class="text-lg font-bold mb-3">Inserir Registro</h2>
@@ -101,7 +126,6 @@
         </div>
       </form>
     </section>
-
     <!-- FILTROS -->
     <section class="bg-white p-4 rounded-lg shadow mb-6">
       <h2 class="text-lg font-bold mb-3">Filtros</h2>
@@ -136,7 +160,6 @@
         <button id="btnExportar" class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">Exportar .xlsx</button>
       </div>
     </section>
-
     <!-- TABELA -->
     <section class="bg-white p-4 rounded-lg shadow mb-6 overflow-x-auto">
       <h2 class="text-lg font-bold mb-3">Registros</h2>
@@ -167,7 +190,6 @@
         </table>
       </div>
     </section>
-
     <!-- MODAL DE IMPORTAÇÃO -->
     <div id="modalImportar" class="fixed inset-0 modal-bg hidden flex items-center justify-center z-50">
       <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl max-h-screen overflow-y-auto">
@@ -186,16 +208,13 @@
         </div>
       </div>
     </div>
-
     <footer class="text-center text-gray-500 text-xs">Desenvolvido by Je4nGomes</footer>
   </div>
-
   <!-- SCRIPTS -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
     import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
-
     const firebaseConfig = {
       apiKey: "AIzaSyDmryG-PKAyU1at8VL7NPRAZAetsoO3sdY",
       authDomain: "saldo-d8113.firebaseapp.com",
@@ -206,38 +225,39 @@
       appId: "1:21759024447:web:55ecbcceb69d9c48f5478a",
       measurementId: "G-78J9NTWH8L"
     };
-
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const storage = getStorage(app);
     const saldosRef = ref(db, 'saldos');
     const cadastrosRef = ref(db, 'cadastros');
-
-    // === FUNÇÕES DE DATA (CORRIGIDAS) ===
+    // === FUNÇÕES DE DATA (CORRIGIDAS E MELHORADAS) ===
     const formatarData = (iso) => {
       if (!iso) return '-';
-      const d = new Date(iso + 'T12:00:00');
+      const datePart = iso.split('T')[0];
+      const d = new Date(datePart + 'T12:00:00');
       if (isNaN(d)) return iso;
-      return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+      return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
     };
-
     const formatarDataBr = (iso) => {
       if (!iso) return '';
-      const d = new Date(iso + 'T12:00:00');
+      const datePart = iso.split('T')[0];
+      const d = new Date(datePart + 'T12:00:00');
       if (isNaN(d)) return '';
-      return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+      return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
     };
-
     const converterDataBrParaIso = (dataBr) => {
       if (!dataBr) return '';
-      const partes = data |
-
-Br.split('/');
+      const partes = dataBr.split('/');
       if (partes.length !== 3) return '';
-      const [dia, mes, ano] = partes.map(p => p.padStart(2, '0'));
-      return `${ano}-${mes}-${dia}`;
+      const [diaStr, mesStr, anoStr] = partes.map(p => p.trim());
+      const dia = parseInt(diaStr, 10);
+      const mes = parseInt(mesStr, 10);
+      const ano = parseInt(anoStr, 10);
+      if (isNaN(dia) || isNaN(mes) || isNaN(ano) || dia < 1 || dia > 31 || mes < 1 || mes > 12 || ano < 1900) return '';
+      const d = new Date(ano, mes - 1, dia);
+      if (d.getFullYear() !== ano || d.getMonth() + 1 !== mes || d.getDate() !== dia) return '';
+      return `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
     };
-
     // === ELEMENTOS ===
     const form = document.getElementById('formulario');
     const lista = document.getElementById('lista');
@@ -256,27 +276,22 @@ Br.split('/');
     const CARD_ABERTO = document.getElementById('card-aberto');
     const CARD_PAGOS = document.getElementById('card-pagos');
     const CARD_TOTAL = document.getElementById('card-total');
-
     let chartStatus = null;
     let chartSaldo = null;
     let senhaAutenticada = false;
     const senhaMestra = '35280712';
-
     const formatarNumero = (n) => Number(n || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
     function parseISODateLocal(isoString) {
       if (!isoString) return null;
       const [datePart] = isoString.split('T');
       const [year, month, day] = datePart.split('-');
       return new Date(year, month - 1, day);
     }
-
     let todosOsRegistros = [];
     let dadosExportacao = [];
     let motoristas = [];
     let transportadoras = [];
     let envelopes = [];
-
     onValue(cadastrosRef, (snap) => {
       const data = snap.val() || {};
       motoristas = Object.values(data).filter(c => c.tipo === 'motorista').map(c => c.nome).sort();
@@ -285,7 +300,6 @@ Br.split('/');
       popularSelects();
       popularFiltrosSelect();
     });
-
     function popularSelects() {
       const selectMotorista = form.querySelector('select[name="motorista"]');
       selectMotorista.innerHTML = '<option value="">Selecione Motorista</option>' + motoristas.map(m => `<option value="${m}">${m}</option>`).join('');
@@ -294,23 +308,19 @@ Br.split('/');
       const selectEnvelope = form.querySelector('select[name="envelope"]');
       selectEnvelope.innerHTML = '<option value="">Selecione Envelope</option>' + envelopes.map(e => `<option value="${e}">${e}</option>`).join('');
     }
-
     function popularFiltrosSelect() {
       filtroMotoristaSelect.innerHTML = '<option value="">Todos os Motoristas</option>' + motoristas.map(m => `<option value="${m}">${m}</option>`).join('');
       filtroTransportadoraSelect.innerHTML = '<option value="">Todas as Transportadoras</option>' + transportadoras.map(t => `<option value="${t}">${t}</option>`).join('');
       filtroEnvelopeSelect.innerHTML = '<option value="">Todos os Envelopes</option>' + envelopes.map(e => `<option value="${e}">${e}</option>`).join('');
     }
-
     flatpickr(filtroDataInicio, { locale: "pt", dateFormat: "d/m/Y", allowInput: true, clickOpens: true });
     flatpickr(filtroDataFim, { locale: "pt", dateFormat: "d/m/Y", allowInput: true, clickOpens: true });
-
     onValue(saldosRef, (snap) => {
       const data = snap.val() || {};
       todosOsRegistros = Object.entries(data).map(([key, val]) => ({ key, ...val }));
       aplicarFiltros();
       montarCardsCharts();
     });
-
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const senha = prompt('Digite a senha para salvar:');
@@ -327,9 +337,7 @@ Br.split('/');
       form.reset();
       alert('Registro salvo com sucesso!');
     });
-
     btnFiltrar.addEventListener('click', aplicarFiltros);
-
     btnLimparFiltros.addEventListener('click', () => {
       filtroMotoristaSelect.value = '';
       filtroTransportadoraSelect.value = '';
@@ -341,11 +349,9 @@ Br.split('/');
       filtroCodigoRastreio.value = '';
       aplicarFiltros();
     });
-
     function aplicarFiltros() {
       lista.innerHTML = '';
       dadosExportacao = [];
-
       const fM = filtroMotoristaSelect.value;
       const fT = filtroTransportadoraSelect.value;
       const fS = filtroStatus.value;
@@ -354,7 +360,6 @@ Br.split('/');
       const fR = filtroCodigoRastreio.value.toLowerCase().trim();
       const dataInicioIso = filtroDataInicio.value ? converterDataBrParaIso(filtroDataInicio.value) : null;
       const dataFimIso = filtroDataFim.value ? converterDataBrParaIso(filtroDataFim.value) : null;
-
       let filtrados = todosOsRegistros.filter(v => {
         const matchMotorista = !fM || v.motorista === fM;
         const matchTransportadora = !fT || v.transportadora === fT;
@@ -363,21 +368,32 @@ Br.split('/');
         const matchEnvelope = !fE || v.envelope === fE;
         const matchRastreio = !fR || (v.codigoRastreio || '').toLowerCase().includes(fR);
         let matchData = true;
-
         if (dataInicioIso || dataFimIso) {
           const dataViagem = v.diaViagem;
           if (!dataViagem) return false;
           if (dataInicioIso && dataViagem < dataInicioIso) return false;
           if (dataFimIso && dataViagem > dataFimIso) return false;
         }
-
         return matchMotorista && matchTransportadora && matchStatus && matchCte && matchEnvelope && matchRastreio && matchData;
       });
 
-      filtrados.sort((a, b) => (a.saldo > 0 ? 0 : 1) - (b.saldo > 0 ? 0 : 1));
+      /* ---------- ORDENAÇÃO: ENVIADO NO TOPO, PAGO NO FINAL ---------- */
+      filtrados.sort((a, b) => {
+        // 1. "Enviado para recebimento" no topo
+        if (a.status === 'Enviado para recebimento' && b.status !== 'Enviado para recebimento') return -1;
+        if (b.status === 'Enviado para recebimento' && a.status !== 'Enviado para recebimento') return 1;
+
+        // 2. "Pago" no final
+        if (a.status === 'Pago' && b.status !== 'Pago') return 1;
+        if (b.status === 'Pago' && a.status !== 'Pago') return -1;
+
+        // 3. Ordem natural para os demais
+        return 0;
+      });
+      /* ---------------------------------------------------------------- */
+
       filtrados.forEach(r => renderizarLinha(r));
     }
-
     function renderizarLinha(val) {
       const tr = document.createElement('tr');
       const bgColor = {
@@ -388,7 +404,6 @@ Br.split('/');
         'Localizar': 'bg-amber-50',
         'Pago': 'bg-green-50'
       }[val.status] || 'bg-gray-50';
-
       const statusColor = {
         'Na empresa, não enviado': 'text-red-600',
         'Com motorista': 'text-orange-600',
@@ -397,18 +412,15 @@ Br.split('/');
         'Localizar': 'text-amber-700',
         'Pago': 'text-green-600'
       }[val.status] || 'text-gray-700';
-
       const statusAbrev = val.status === 'Na empresa, não enviado' ? 'Na empresa' :
-                         val.status === 'Com motorista' ? 'Com mot.' :
-                         val.status === 'Enviado para recebimento' ? 'Enviado' :
-                         val.status === 'Não recebido' ? 'Não rec.' :
-                         val.status === 'Localizar' ? 'Localizar' :
-                         val.status === 'Pago' ? 'Pago' : val.status;
-
+                          val.status === 'Com motorista' ? 'Com mot.' :
+                          val.status === 'Enviado para recebimento' ? 'Enviado' :
+                          val.status === 'Não recebido' ? 'Não rec.' :
+                          val.status === 'Localizar' ? 'Localizar' :
+                          val.status === 'Pago' ? 'Pago' : val.status;
       const truncar = (texto, max) => !texto ? '-' : texto.length > max ? texto.substring(0, max - 3) + '...' : texto;
       const motorista = truncar(val.motorista, 15);
       const transportadora = truncar(val.transportadora, 12);
-
       tr.className = bgColor;
       tr.innerHTML = `
         <td class="border px-1 py-1 text-center"><input type="checkbox" class="rowCheck" data-saldo="${val.saldo || 0}" data-key="${val.key}"></td>
@@ -460,18 +472,20 @@ Br.split('/');
         PDF: val.pdfUrl || ''
       });
     }
-
     btnExportar.addEventListener('click', () => {
       const ws = XLSX.utils.json_to_sheet(dadosExportacao);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Saldos');
       XLSX.writeFile(wb, `saldos_${new Date().toISOString().slice(0,10)}.xlsx`);
     });
-
+    // Event listener melhorado para ações
     document.addEventListener('click', async (e) => {
-      const key = e.target.getAttribute('data-key');
+      const key = e.target.dataset.key;
       if (!key) return;
-
+      const closeMenu = (k) => {
+        const menu = document.getElementById(`actions-menu-${k}`);
+        if (menu) menu.classList.add('hidden');
+      };
       if (e.target.classList.contains('actions-btn')) {
         if (!senhaAutenticada) {
           const senha = prompt('Digite a senha para ações:');
@@ -479,13 +493,21 @@ Br.split('/');
           senhaAutenticada = true;
         }
         const menu = document.getElementById(`actions-menu-${key}`);
-        menu.classList.toggle('hidden');
+        if (!menu) return;
+        const wasHidden = menu.classList.contains('hidden');
+        document.querySelectorAll('.actions-menu').forEach(m => m.classList.add('hidden'));
+        if (wasHidden) {
+          menu.classList.remove('hidden');
+        }
+        return;
       }
-
       if (e.target.classList.contains('upload-btn')) {
         const input = document.createElement('input');
-        input.type = 'file'; input.accept = 'application/pdf'; input.style.display = 'none';
-        document.body.appendChild(input); input.click();
+        input.type = 'file';
+        input.accept = 'application/pdf';
+        input.style.display = 'none';
+        document.body.appendChild(input);
+        input.click();
         input.addEventListener('change', async () => {
           const file = input.files[0];
           if (file) {
@@ -496,17 +518,18 @@ Br.split('/');
             alert('PDF anexado com sucesso!');
           }
           document.body.removeChild(input);
+          closeMenu(key);
         });
+        return;
       }
-
       if (e.target.classList.contains('delete-btn') && confirm('Excluir este registro?')) {
         await remove(ref(db, `saldos/${key}`));
+        closeMenu(key);
+        return;
       }
-
       if (e.target.classList.contains('mark-recebido-btn')) {
         let data = prompt('Data de recebimento (dd/mm/aaaa) ou deixe em branco para hoje:');
         if (data === null) return;
-
         let dataIso = '';
         if (!data || !data.trim()) {
           const hoje = new Date();
@@ -526,15 +549,12 @@ Br.split('/');
           }
           dataIso = d.toISOString();
         }
-
-        await update(ref(db, `saldos/${key}`), {
-          saldo: 0,
-          dataRecebimento: dataIso,
-          status: 'Pago'
-        });
+        await update(ref(db, `saldos/${key}`), { saldo: 0, dataRecebimento: dataIso, status: 'Pago' });
+        closeMenu(key);
+        return;
       }
-
       if (e.target.classList.contains('edit-btn')) {
+        closeMenu(key);
         const reg = todosOsRegistros.find(r => r.key === key);
         if (!reg) return;
         const modal = document.createElement('div');
@@ -545,30 +565,30 @@ Br.split('/');
             <form id="form-edit-${key}" class="grid grid-cols-2 gap-3 text-sm">
               <select name="motorista" class="border p-2 rounded" required>
                 <option value="">Selecione Motorista</option>
-                ${motoristas.map(m => `<option value="${m}" ${reg.motorista===m?'selected':''}>${m}</option>`).join('')}
+                ${motoristas.map(m => `<option value="${m}" ${reg.motorista === m ? 'selected' : ''}>${m}</option>`).join('')}
               </select>
               <select name="transportadora" class="border p-2 rounded" required>
                 <option value="">Selecione Transportadora</option>
-                ${transportadoras.map(t => `<option value="${t}" ${reg.transportadora===t?'selected':''}>${t}</option>`).join('')}
+                ${transportadoras.map(t => `<option value="${t}" ${reg.transportadora === t ? 'selected' : ''}>${t}</option>`).join('')}
               </select>
-              <input type="date" name="diaViagem" value="${reg.diaViagem||''}" class="border p-2 rounded" required />
-              <input name="cte" value="${reg.cte||''}" class="border p-2 rounded" />
-              <input name="nfe" value="${reg.nfe||''}" class="border p-2 rounded" />
+              <input type="date" name="diaViagem" value="${reg.diaViagem || ''}" class="border p-2 rounded" required />
+              <input name="cte" value="${reg.cte || ''}" class="border p-2 rounded" />
+              <input name="nfe" value="${reg.nfe || ''}" class="border p-2 rounded" />
               <select name="status" class="border p-2 rounded" required>
-                <option value="Na empresa, não enviado" ${reg.status==='Na empresa, não enviado'?'selected':''} style="background:#fca5a5;color:#991b1b;">Na empresa, não enviado</option>
-                <option value="Com motorista" ${reg.status==='Com motorista'?'selected':''} style="background:#fdba74;color:#9a3412;">Com motorista</option>
-                <option value="Enviado para recebimento" ${reg.status==='Enviado para recebimento'?'selected':''} style="background:#93c5fd;color:#1e40af;">Enviado para recebimento</option>
-                <option value="Não recebido" ${reg.status==='Não recebido'?'selected':''} style="background:#d4d4d8;color:#3f3f46;">Não recebido</option>
-                <option value="Localizar" ${reg.status==='Localizar'?'selected':''} style="background:#fbbf24;color:#78350f;">Localizar</option>
-                <option value="Pago" ${reg.status==='Pago'?'selected':''} style="background:#86efac;color:#166534;">Pago</option>
+                <option value="Na empresa, não enviado" ${reg.status === 'Na empresa, não enviado' ? 'selected' : ''} style="background:#fca5a5;color:#991b1b;">Na empresa, não enviado</option>
+                <option value="Com motorista" ${reg.status === 'Com motorista' ? 'selected' : ''} style="background:#fdba74;color:#9a3412;">Com motorista</option>
+                <option value="Enviado para recebimento" ${reg.status === 'Enviado para recebimento' ? 'selected' : ''} style="background:#93c5fd;color:#1e40af;">Enviado para recebimento</option>
+                <option value="Não recebido" ${reg.status === 'Não recebido' ? 'selected' : ''} style="background:#d4d4d8;color:#3f3f46;">Não recebido</option>
+                <option value="Localizar" ${reg.status === 'Localizar' ? 'selected' : ''} style="background:#fbbf24;color:#78350f;">Localizar</option>
+                <option value="Pago" ${reg.status === 'Pago' ? 'selected' : ''} style="background:#86efac;color:#166534;">Pago</option>
               </select>
-              <input name="codigoRastreio" value="${reg.codigoRastreio||''}" class="border p-2 rounded" />
+              <input name="codigoRastreio" value="${reg.codigoRastreio || ''}" class="border p-2 rounded" />
               <select name="envelope" class="border p-2 rounded">
                 <option value="">Selecione Envelope</option>
-                ${envelopes.map(e => `<option value="${e}" ${reg.envelope===e?'selected':''}>${e}</option>`).join('')}
+                ${envelopes.map(e => `<option value="${e}" ${reg.envelope === e ? 'selected' : ''}>${e}</option>`).join('')}
               </select>
-              <input type="number" name="valorFrete" value="${reg.valorFrete||0}" step="0.01" class="border p-2 rounded" required />
-              <input type="number" name="adiantamento" value="${reg.adiantamento||0}" step="0.01" class="border p-2 rounded" required />
+              <input type="number" name="valorFrete" value="${reg.valorFrete || 0}" step="0.01" class="border p-2 rounded" required />
+              <input type="number" name="adiantamento" value="${reg.adiantamento || 0}" step="0.01" class="border p-2 rounded" required />
               <input type="text" name="dataRecebimentoEnvelope" value="${formatarDataBr(reg.dataRecebimentoEnvelope)}" class="border p-2 rounded" placeholder="dd/mm/aaaa" />
               <input type="text" name="dataDigitalizacao" value="${formatarDataBr(reg.dataDigitalizacao)}" class="border p-2 rounded" placeholder="dd/mm/aaaa" />
               <input type="text" name="dataEnvioCliente" value="${formatarDataBr(reg.dataEnvioCliente)}" class="border p-2 rounded" placeholder="dd/mm/aaaa" />
@@ -581,34 +601,28 @@ Br.split('/');
         `;
         document.body.appendChild(modal);
         document.getElementById(`cancel-${key}`).onclick = () => modal.remove();
-
-        // Flatpickr nos campos de data do modal
         flatpickr(modal.querySelectorAll('input[placeholder="dd/mm/aaaa"]'), {
           locale: "pt",
           dateFormat: "d/m/Y",
           allowInput: true
         });
-
         document.getElementById(`form-edit-${key}`).addEventListener('submit', async (ev) => {
           ev.preventDefault();
           const formData = new FormData(ev.target);
           const dados = Object.fromEntries(formData.entries());
-
           if (dados.dataRecebimentoEnvelope) dados.dataRecebimentoEnvelope = converterDataBrParaIso(dados.dataRecebimentoEnvelope);
           if (dados.dataDigitalizacao) dados.dataDigitalizacao = converterDataBrParaIso(dados.dataDigitalizacao);
           if (dados.dataEnvioCliente) dados.dataEnvioCliente = converterDataBrParaIso(dados.dataEnvioCliente);
-
           dados.valorFrete = parseFloat(dados.valorFrete || 0);
           dados.adiantamento = parseFloat(dados.adiantamento || 0);
           dados.saldo = parseFloat((dados.valorFrete - dados.adiantamento).toFixed(2));
           if (dados.status === 'Enviado para recebimento') dados.dataEnvio = new Date().toISOString();
-
           await update(ref(db, `saldos/${key}`), dados);
           modal.remove();
         });
+        return;
       }
     });
-
     function montarCardsCharts() {
       CARD_TOTAL.textContent = todosOsRegistros.length;
       const totais = todosOsRegistros.reduce((acc, r) => {
@@ -620,13 +634,11 @@ Br.split('/');
       CARD_SALDO.textContent = `R$ ${formatarNumero(totais.saldoTotal)}`;
       CARD_ABERTO.textContent = totais.aberto;
       CARD_PAGOS.textContent = totais.pago;
-
       const statusCount = {};
       todosOsRegistros.forEach(r => {
         const s = r.status || 'Outro';
         statusCount[s] = (statusCount[s] || 0) + 1;
       });
-
       const statusOrder = ['Na empresa, não enviado', 'Com motorista', 'Enviado para recebimento', 'Não recebido', 'Localizar', 'Pago', 'Outro'];
       const labels = statusOrder.filter(s => statusCount[s]);
       const dataValues = labels.map(s => statusCount[s]);
@@ -640,15 +652,16 @@ Br.split('/');
         'Outro': '#6b7280'
       };
       const backgroundColors = labels.map(s => colors[s]);
-
       const ctxStatus = document.getElementById('chart-status').getContext('2d');
       if (chartStatus) chartStatus.destroy();
       chartStatus = new Chart(ctxStatus, {
         type: 'pie',
         data: { labels, datasets: [{ data: dataValues, backgroundColor: backgroundColors }] },
-        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom' } }
+        }
       });
-
       const ctxSaldo = document.getElementById('chart-saldo').getContext('2d');
       if (chartSaldo) chartSaldo.destroy();
       const porMes = {};
@@ -666,11 +679,23 @@ Br.split('/');
       const valores = mesesOrdenados.map(m => porMes[m]);
       chartSaldo = new Chart(ctxSaldo, {
         type: 'bar',
-        data: { labels: labelsSaldo, datasets: [{ label: 'Saldo em Aberto', data: valores, backgroundColor: '#dc2626', borderColor: '#b91c1c', borderWidth: 1 }] },
-        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        data: {
+          labels: labelsSaldo,
+          datasets: [{
+            label: 'Saldo em Aberto',
+            data: valores,
+            backgroundColor: '#dc2626',
+            borderColor: '#b91c1c',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } }
+        }
       });
     }
-
     lista.addEventListener('change', (e) => {
       if (e.target.classList.contains('rowCheck')) {
         let total = 0;
@@ -678,16 +703,14 @@ Br.split('/');
         CARD_SALDO.textContent = `R$ ${formatarNumero(total)}`;
       }
     });
-
     document.getElementById('selectAll').addEventListener('change', (e) => {
       document.querySelectorAll('.rowCheck').forEach(c => c.checked = e.target.checked);
-      const total = e.target.checked ? todosOsRegistros.reduce((a,r) => a + Number(r.saldo||0), 0) : 0;
+      const total = e.target.checked ? todosOsRegistros.reduce((a, r) => a + Number(r.saldo || 0), 0) : 0;
       CARD_SALDO.textContent = `R$ ${formatarNumero(total)}`;
     });
-
     montarCardsCharts();
 
-    // === IMPORTAÇÃO DE CSV ===
+    /* ================== IMPORTAÇÃO DE CSV (COM STATUS FORÇADO NO TOPO) ================== */
     const btnImportar = document.getElementById('btnImportar');
     const modalImportar = document.getElementById('modalImportar');
     const inputCsv = document.getElementById('inputCsv');
@@ -711,7 +734,6 @@ Br.split('/');
     inputCsv.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = function (ev) {
         try {
@@ -744,13 +766,13 @@ Br.split('/');
 
             return {
               diaViagem,
-              transportadora: encontrarTransportadoraOficial(cliente),
+              transportadora: cliente,
               valorFrete,
               adiantamento,
               cte,
               saldo,
-              status: 'Enviado para recebimento',
-              dataEnvio: new Date().toISOString(),
+              status: 'Enviado para recebimento',   // FORÇADO
+              dataEnvio: new Date().toISOString(),  // FORÇADO
               motorista: '',
               envelope: '',
               nfe: '',
@@ -769,7 +791,6 @@ Br.split('/');
           alert('Erro ao ler o CSV. Verifique o formato (use ; como separador e cabeçalhos corretos).');
         }
       };
-
       reader.readAsBinaryString(file);
     });
 
@@ -779,7 +800,6 @@ Br.split('/');
         previewTable.innerHTML = '<p class="text-gray-500">Nenhum dado válido encontrado.</p>';
         return;
       }
-
       const table = document.createElement('table');
       table.className = 'min-w-full text-xs table-auto border';
       table.innerHTML = `
@@ -799,8 +819,8 @@ Br.split('/');
         </thead>
         <tbody></tbody>
       `;
-
       const tbody = table.querySelector('tbody');
+
       dadosImportados.forEach((d, i) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -813,13 +833,13 @@ Br.split('/');
           <td class="border px-2 py-1">
             <select class="motorista-select text-xs border rounded p-1 w-full" data-index="${i}">
               <option value="">Selecione</option>
-              ${motoristas.map(m => `<option value="${m}" ${d.motorista===m?'selected':''}>${m}</option>`).join('')}
+              ${motoristas.map(m => `<option value="${m}" ${d.motorista === m ? 'selected' : ''}>${m}</option>`).join('')}
             </select>
           </td>
           <td class="border px-2 py-1">
             <select class="envelope-select text-xs border rounded p-1 w-full" data-index="${i}">
               <option value="">Selecione</option>
-              ${envelopes.map(e => `<option value="${e}" ${d.envelope===e?'selected':''}>${e}</option>`).join('')}
+              ${envelopes.map(e => `<option value="${e}" ${d.envelope === e ? 'selected' : ''}>${e}</option>`).join('')}
             </select>
           </td>
           <td class="border px-2 py-1">
@@ -833,26 +853,26 @@ Br.split('/');
       });
 
       table.querySelectorAll('.motorista-select').forEach(sel => {
-        sel.addEventListener('change', (e) => {
+        sel.addEventListener('change', e => {
           const idx = e.target.dataset.index;
           dadosImportados[idx].motorista = e.target.value;
         });
       });
       table.querySelectorAll('.envelope-select').forEach(sel => {
-        sel.addEventListener('change', (e) => {
+        sel.addEventListener('change', e => {
           const idx = e.target.dataset.index;
           dadosImportados[idx].envelope = e.target.value;
         });
       });
       table.querySelectorAll('.date-input').forEach(input => {
-        input.addEventListener('change', (e) => {
+        input.addEventListener('change', e => {
           const idx = e.target.dataset.index;
           const field = e.target.dataset.field;
           dadosImportados[idx][field] = e.target.value;
         });
       });
       table.querySelectorAll('.remover-linha').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', e => {
           const idx = parseInt(e.target.dataset.index);
           dadosImportados.splice(idx, 1);
           renderizarPreview();
@@ -873,6 +893,9 @@ Br.split('/');
 
       try {
         for (const dados of dadosImportados) {
+          // Garante novamente o status na gravação
+          dados.status = 'Enviado para recebimento';
+          dados.dataEnvio = new Date().toISOString();
           await push(saldosRef, dados);
         }
         alert(`Importação concluída! ${dadosImportados.length} registros salvos.`);
@@ -882,6 +905,7 @@ Br.split('/');
         alert('Erro ao salvar: ' + err.message);
       }
     });
+    /* ================================================================================ */
   </script>
 </body>
 </html>
