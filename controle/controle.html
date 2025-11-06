@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -14,21 +13,8 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
   <style>
-    .actions-menu {
-      min-width: 180px;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      top: 100%;
-      right: 0;
-    }
-    .actions-menu button, .actions-menu a {
-      display: block;
-      width: 100%;
-      padding: 8px 12px;
-      text-align: left;
-      font-size: 0.875rem;
-    }
+    .actions-menu { min-width: 180px; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15); top: 100%; right: 0; }
+    .actions-menu button, .actions-menu a { display: block; width: 100%; padding: 8px 12px; text-align: left; font-size: 0.875rem; }
     .modal-bg { background: rgba(0,0,0,0.5); }
     .acoes-col { width: 1%; white-space: nowrap; }
     .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -109,7 +95,6 @@
         </select>
         <input type="number" name="valorFrete" placeholder="Valor Frete" step="0.01" required class="border p-2 py-1 rounded text-sm" />
         <input type="number" name="adiantamento" placeholder="Adiantamento" step="0.01" required class="border p-2 py-1 rounded text-sm" />
-        
         <div class="flex gap-2 col-span-2 md:col-span-1">
           <button type="button" id="btnImportar" class="bg-purple-600 text-white p-2 rounded text-sm hover:bg-purple-700 flex-1">Importar CSV</button>
           <button type="submit" class="bg-blue-600 text-white p-2 rounded text-sm hover:bg-blue-700 flex-1">Salvar (senha)</button>
@@ -117,47 +102,40 @@
       </form>
     </section>
 
-<!-- FILTROS -->
-<section class="bg-white p-4 rounded-lg shadow mb-6">
-  <h2 class="text-lg font-bold mb-3">Filtros</h2>
-  <div class="flex flex-wrap gap-3 items-center">
-    <select id="filtroMotoristaSelect" class="border p-2 rounded text-sm">
-      <option value="">Todos os Motoristas</option>
-    </select>
-    <select id="filtroTransportadoraSelect" class="border p-2 rounded text-sm">
-      <option value="">Todas as Transportadoras</option>
-    </select>
-    <select id="filtroStatus" class="border p-2 rounded text-sm">
-      <option value="">Todos os Status</option>
-      <option value="Na empresa, não enviado">Na empresa</option>
-      <option value="Com motorista">Com motorista</option>
-      <option value="Enviado para recebimento">Enviado</option>
-      <option value="Não recebido">Não recebido</option>
-      <option value="Localizar">Localizar</option>
-      <option value="Pago">Pago</option>
-    </select>
-    <input id="filtroCte" placeholder="Filtrar CTe" class="border p-2 rounded text-sm" />
-    
-    <!-- NOVO FILTRO: CÓDIGO DE RASTREIO -->
-    <input id="filtroCodigoRastreio" placeholder="Filtrar Rastreio" class="border p-2 rounded text-sm" />
-
-    <!-- FILTRO ENVELOPE COMO SELECT -->
-    <select id="filtroEnvelopeSelect" class="border p-2 rounded text-sm">
-      <option value="">Todos os Envelopes</option>
-    </select>
-
-    <!-- FILTRO DE DATA COM CALENDÁRIO -->
-    <div class="flex gap-1 items-center">
-      <input id="filtroDataInicio" type="text" placeholder="De" class="flatpickr-input" readonly />
-      <span class="text-gray-600">até</span>
-      <input id="filtroDataFim" type="text" placeholder="Até" class="flatpickr-input" readonly />
-    </div>
-
-    <button id="btnFiltrar" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">Aplicar Filtros</button>
-    <button id="btnLimparFiltros" class="bg-gray-500 text-white px-4 py-2 rounded text-sm hover:bg-gray-600">Limpar</button>
-    <button id="btnExportar" class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">Exportar .xlsx</button>
-  </div>
-</section>
+    <!-- FILTROS -->
+    <section class="bg-white p-4 rounded-lg shadow mb-6">
+      <h2 class="text-lg font-bold mb-3">Filtros</h2>
+      <div class="flex flex-wrap gap-3 items-center">
+        <select id="filtroMotoristaSelect" class="border p-2 rounded text-sm">
+          <option value="">Todos os Motoristas</option>
+        </select>
+        <select id="filtroTransportadoraSelect" class="border p-2 rounded text-sm">
+          <option value="">Todas as Transportadoras</option>
+        </select>
+        <select id="filtroStatus" class="border p-2 rounded text-sm">
+          <option value="">Todos os Status</option>
+          <option value="Na empresa, não enviado">Na empresa</option>
+          <option value="Com motorista">Com motorista</option>
+          <option value="Enviado para recebimento">Enviado</option>
+          <option value="Não recebido">Não recebido</option>
+          <option value="Localizar">Localizar</option>
+          <option value="Pago">Pago</option>
+        </select>
+        <input id="filtroCte" placeholder="Filtrar CTe" class="border p-2 rounded text-sm" />
+        <input id="filtroCodigoRastreio" placeholder="Filtrar Rastreio" class="border p-2 rounded text-sm" />
+        <select id="filtroEnvelopeSelect" class="border p-2 rounded text-sm">
+          <option value="">Todos os Envelopes</option>
+        </select>
+        <div class="flex gap-1 items-center">
+          <input id="filtroDataInicio" type="text" placeholder="De" class="flatpickr-input" readonly />
+          <span class="text-gray-600">até</span>
+          <input id="filtroDataFim" type="text" placeholder="Até" class="flatpickr-input" readonly />
+        </div>
+        <button id="btnFiltrar" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">Aplicar</button>
+        <button id="btnLimparFiltros" class="bg-gray-500 text-white px-4 py-2 rounded text-sm hover:bg-gray-600">Limpar</button>
+        <button id="btnExportar" class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">Exportar .xlsx</button>
+      </div>
+    </section>
 
     <!-- TABELA -->
     <section class="bg-white p-4 rounded-lg shadow mb-6 overflow-x-auto">
@@ -235,6 +213,32 @@
     const saldosRef = ref(db, 'saldos');
     const cadastrosRef = ref(db, 'cadastros');
 
+    // === FUNÇÕES DE DATA (CORRIGIDAS) ===
+    const formatarData = (iso) => {
+      if (!iso) return '-';
+      const d = new Date(iso + 'T12:00:00');
+      if (isNaN(d)) return iso;
+      return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+    };
+
+    const formatarDataBr = (iso) => {
+      if (!iso) return '';
+      const d = new Date(iso + 'T12:00:00');
+      if (isNaN(d)) return '';
+      return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+    };
+
+    const converterDataBrParaIso = (dataBr) => {
+      if (!dataBr) return '';
+      const partes = data |
+
+Br.split('/');
+      if (partes.length !== 3) return '';
+      const [dia, mes, ano] = partes.map(p => p.padStart(2, '0'));
+      return `${ano}-${mes}-${dia}`;
+    };
+
+    // === ELEMENTOS ===
     const form = document.getElementById('formulario');
     const lista = document.getElementById('lista');
     const filtroMotoristaSelect = document.getElementById('filtroMotoristaSelect');
@@ -244,8 +248,8 @@
     const filtroDataFim = document.getElementById('filtroDataFim');
     const filtroCte = document.getElementById('filtroCte');
     const filtroEnvelopeSelect = document.getElementById('filtroEnvelopeSelect');
-    const btnFiltrar = document.getElementById('btnFiltrar');
     const filtroCodigoRastreio = document.getElementById('filtroCodigoRastreio');
+    const btnFiltrar = document.getElementById('btnFiltrar');
     const btnLimparFiltros = document.getElementById('btnLimparFiltros');
     const btnExportar = document.getElementById('btnExportar');
     const CARD_SALDO = document.getElementById('card-saldo');
@@ -259,46 +263,12 @@
     const senhaMestra = '35280712';
 
     const formatarNumero = (n) => Number(n || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const formatarData = (iso) => {
-      if (!iso) return '-';
-      const d = new Date(iso);
-      if (isNaN(d)) return iso;
-      return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-    };
 
     function parseISODateLocal(isoString) {
       if (!isoString) return null;
       const [datePart] = isoString.split('T');
       const [year, month, day] = datePart.split('-');
       return new Date(year, month - 1, day);
-    }
-
-    function normalizarNome(nome) {
-      return nome.trim().toLowerCase()
-        .replace(/[^\w\s]/g, '')
-        .replace(/\s+/g, ' ');
-    }
-
-    function encontrarTransportadoraOficial(nomeCsv) {
-      const nomeNorm = normalizarNome(nomeCsv);
-      for (const oficial of transportadoras) {
-        if (normalizarNome(oficial) === nomeNorm) return oficial;
-      }
-      for (const oficial of transportadoras) {
-        if (normalizarNome(oficial).includes(nomeNorm) || nomeNorm.includes(normalizarNome(oficial))) {
-          return oficial;
-        }
-      }
-      return nomeCsv.trim();
-    }
-
-    function converterDataBrParaIso(dataBr) {
-      if (!dataBr) return null;
-      const partes = dataBr.split('/');
-      if (partes.length !== 3) return null;
-      const [dia, mes, ano] = partes;
-      if (dia.length !== 2 || mes.length !== 2 || ano.length !== 4) return null;
-      return `${ano}-${mes}-${dia}`;
     }
 
     let todosOsRegistros = [];
@@ -358,54 +328,55 @@
       alert('Registro salvo com sucesso!');
     });
 
-  btnFiltrar.addEventListener('click', aplicarFiltros);
-  btnLimparFiltros.addEventListener('click', () => {
-  filtroMotoristaSelect.value = '';
-  filtroTransportadoraSelect.value = '';
-  filtroStatus.value = '';
-  filtroCte.value = '';
-  filtroEnvelopeSelect.value = '';
-  filtroDataInicio.value = '';
-  filtroDataFim.value = '';
-  filtroCodigoRastreio.value = ''; // <--- NOVA LINHA
-  aplicarFiltros();
-});
+    btnFiltrar.addEventListener('click', aplicarFiltros);
 
-function aplicarFiltros() {
-  lista.innerHTML = '';
-  dadosExportacao = [];
+    btnLimparFiltros.addEventListener('click', () => {
+      filtroMotoristaSelect.value = '';
+      filtroTransportadoraSelect.value = '';
+      filtroStatus.value = '';
+      filtroCte.value = '';
+      filtroEnvelopeSelect.value = '';
+      filtroDataInicio.value = '';
+      filtroDataFim.value = '';
+      filtroCodigoRastreio.value = '';
+      aplicarFiltros();
+    });
 
-  const fM = filtroMotoristaSelect.value;
-  const fT = filtroTransportadoraSelect.value;
-  const fS = filtroStatus.value;
-  const fC = filtroCte.value.toLowerCase().trim();
-  const fE = filtroEnvelopeSelect.value;
-  const fR = filtroCodigoRastreio.value.toLowerCase().trim(); // <--- NOVA LINHA
-  const dataInicioIso = filtroDataInicio.value ? converterDataBrParaIso(filtroDataInicio.value) : null;
-  const dataFimIso = filtroDataFim.value ? converterDataBrParaIso(filtroDataFim.value) : null;
+    function aplicarFiltros() {
+      lista.innerHTML = '';
+      dadosExportacao = [];
 
-  let filtrados = todosOsRegistros.filter(v => {
-    const matchMotorista = !fM || v.motorista === fM;
-    const matchTransportadora = !fT || v.transportadora === fT;
-    const matchStatus = !fS || v.status === fS;
-    const matchCte = !fC || (v.cte || '').toLowerCase().includes(fC);
-    const matchEnvelope = !fE || v.envelope === fE;
-    const matchRastreio = !fR || (v.codigoRastreio || '').toLowerCase().includes(fR); // <--- NOVA LINHA
-    let matchData = true;
+      const fM = filtroMotoristaSelect.value;
+      const fT = filtroTransportadoraSelect.value;
+      const fS = filtroStatus.value;
+      const fC = filtroCte.value.toLowerCase().trim();
+      const fE = filtroEnvelopeSelect.value;
+      const fR = filtroCodigoRastreio.value.toLowerCase().trim();
+      const dataInicioIso = filtroDataInicio.value ? converterDataBrParaIso(filtroDataInicio.value) : null;
+      const dataFimIso = filtroDataFim.value ? converterDataBrParaIso(filtroDataFim.value) : null;
 
-    if (dataInicioIso || dataFimIso) {
-      const dataViagem = v.diaViagem;
-      if (!dataViagem) return false;
-      if (dataInicioIso && dataViagem < dataInicioIso) return false;
-      if (dataFimIso && dataViagem > dataFimIso) return false;
+      let filtrados = todosOsRegistros.filter(v => {
+        const matchMotorista = !fM || v.motorista === fM;
+        const matchTransportadora = !fT || v.transportadora === fT;
+        const matchStatus = !fS || v.status === fS;
+        const matchCte = !fC || (v.cte || '').toLowerCase().includes(fC);
+        const matchEnvelope = !fE || v.envelope === fE;
+        const matchRastreio = !fR || (v.codigoRastreio || '').toLowerCase().includes(fR);
+        let matchData = true;
+
+        if (dataInicioIso || dataFimIso) {
+          const dataViagem = v.diaViagem;
+          if (!dataViagem) return false;
+          if (dataInicioIso && dataViagem < dataInicioIso) return false;
+          if (dataFimIso && dataViagem > dataFimIso) return false;
+        }
+
+        return matchMotorista && matchTransportadora && matchStatus && matchCte && matchEnvelope && matchRastreio && matchData;
+      });
+
+      filtrados.sort((a, b) => (a.saldo > 0 ? 0 : 1) - (b.saldo > 0 ? 0 : 1));
+      filtrados.forEach(r => renderizarLinha(r));
     }
-
-    return matchMotorista && matchTransportadora && matchStatus && matchCte && matchEnvelope && matchRastreio && matchData;
-  });
-
-  filtrados.sort((a, b) => (a.saldo > 0 ? 0 : 1) - (b.saldo > 0 ? 0 : 1));
-  filtrados.forEach(r => renderizarLinha(r));
-}
 
     function renderizarLinha(val) {
       const tr = document.createElement('tr');
@@ -460,10 +431,7 @@ function aplicarFiltros() {
           <div class="relative">
             <button data-key="${val.key}" class="actions-btn bg-gray-600 hover:bg-gray-700 text-white px-2 py-0.5 rounded text-xs">Ações</button>
             <div id="actions-menu-${val.key}" class="actions-menu hidden absolute bg-white border rounded shadow-lg z-50 top-full right-0 mt-1">
-              ${val.pdfUrl
-                ? `<a href="${val.pdfUrl}" target="_blank" class="text-blue-600 hover:bg-gray-100 block px-3 py-1 text-xs">Ver PDF</a>`
-                : `<button data-key="${val.key}" class="upload-btn text-blue-600 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Anexar PDF</button>`
-              }
+              ${val.pdfUrl ? `<a href="${val.pdfUrl}" target="_blank" class="text-blue-600 hover:bg-gray-100 block px-3 py-1 text-xs">Ver PDF</a>` : `<button data-key="${val.key}" class="upload-btn text-blue-600 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Anexar PDF</button>`}
               <button data-key="${val.key}" class="delete-btn text-red-600 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Excluir</button>
               ${val.saldo > 0 ? `<button data-key="${val.key}" class="mark-recebido-btn text-green-600 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Marcar como Recebido</button>` : ''}
               <button data-key="${val.key}" class="edit-btn text-yellow-700 hover:bg-gray-100 w-full text-left px-3 py-1 text-xs">Editar</button>
@@ -484,10 +452,10 @@ function aplicarFiltros() {
         Frete: formatarNumero(val.valorFrete),
         Adiantamento: formatarNumero(val.adiantamento),
         Saldo: formatarNumero(val.saldo),
-        DataRecebimentoEnvelope: val.dataRecebimentoEnvelope || '',
-        DataDigitalizacao: val.dataDigitalizacao || '',
-        DataEnvioCliente: val.dataEnvioCliente || '',
-        DataRecebimento: val.dataRecebimento || '',
+        DataRecebimentoEnvelope: formatarData(val.dataRecebimentoEnvelope),
+        DataDigitalizacao: formatarData(val.dataDigitalizacao),
+        DataEnvioCliente: formatarData(val.dataEnvioCliente),
+        DataRecebimento: formatarData(val.dataRecebimento),
         DataInsercao: val.dataInsercao || '',
         PDF: val.pdfUrl || ''
       });
@@ -536,10 +504,34 @@ function aplicarFiltros() {
       }
 
       if (e.target.classList.contains('mark-recebido-btn')) {
-        let data = prompt('Data de recebimento (ou deixe em branco para agora):');
+        let data = prompt('Data de recebimento (dd/mm/aaaa) ou deixe em branco para hoje:');
         if (data === null) return;
-        if (!data.trim()) data = new Date().toISOString();
-        await update(ref(db, `saldos/${key}`), { saldo: 0, dataRecebimento: data, status: 'Pago' });
+
+        let dataIso = '';
+        if (!data || !data.trim()) {
+          const hoje = new Date();
+          hoje.setHours(12, 0, 0, 0);
+          dataIso = hoje.toISOString();
+        } else {
+          const partes = data.trim().split('/');
+          if (partes.length !== 3 || isNaN(partes[0]) || isNaN(partes[1]) || isNaN(partes[2])) {
+            alert('Data inválida! Use dd/mm/aaaa');
+            return;
+          }
+          const [dia, mes, ano] = partes.map(Number);
+          const d = new Date(ano, mes - 1, dia, 12, 0, 0);
+          if (isNaN(d)) {
+            alert('Data inválida!');
+            return;
+          }
+          dataIso = d.toISOString();
+        }
+
+        await update(ref(db, `saldos/${key}`), {
+          saldo: 0,
+          dataRecebimento: dataIso,
+          status: 'Pago'
+        });
       }
 
       if (e.target.classList.contains('edit-btn')) {
@@ -577,9 +569,9 @@ function aplicarFiltros() {
               </select>
               <input type="number" name="valorFrete" value="${reg.valorFrete||0}" step="0.01" class="border p-2 rounded" required />
               <input type="number" name="adiantamento" value="${reg.adiantamento||0}" step="0.01" class="border p-2 rounded" required />
-              <input type="date" name="dataRecebimentoEnvelope" value="${reg.dataRecebimentoEnvelope||''}" class="border p-2 rounded col-span-2" placeholder="Receb. Envelope" />
-              <input type="date" name="dataDigitalizacao" value="${reg.dataDigitalizacao||''}" class="border p-2 rounded" placeholder="Digitalização" />
-              <input type="date" name="dataEnvioCliente" value="${reg.dataEnvioCliente||''}" class="border p-2 rounded" placeholder="Envio Cliente" />
+              <input type="text" name="dataRecebimentoEnvelope" value="${formatarDataBr(reg.dataRecebimentoEnvelope)}" class="border p-2 rounded" placeholder="dd/mm/aaaa" />
+              <input type="text" name="dataDigitalizacao" value="${formatarDataBr(reg.dataDigitalizacao)}" class="border p-2 rounded" placeholder="dd/mm/aaaa" />
+              <input type="text" name="dataEnvioCliente" value="${formatarDataBr(reg.dataEnvioCliente)}" class="border p-2 rounded" placeholder="dd/mm/aaaa" />
               <div class="col-span-2 flex gap-2">
                 <button type="submit" class="bg-blue-600 text-white p-2 rounded flex-1">Salvar</button>
                 <button type="button" id="cancel-${key}" class="bg-gray-400 text-white p-2 rounded flex-1">Cancelar</button>
@@ -589,13 +581,28 @@ function aplicarFiltros() {
         `;
         document.body.appendChild(modal);
         document.getElementById(`cancel-${key}`).onclick = () => modal.remove();
+
+        // Flatpickr nos campos de data do modal
+        flatpickr(modal.querySelectorAll('input[placeholder="dd/mm/aaaa"]'), {
+          locale: "pt",
+          dateFormat: "d/m/Y",
+          allowInput: true
+        });
+
         document.getElementById(`form-edit-${key}`).addEventListener('submit', async (ev) => {
           ev.preventDefault();
-          const dados = Object.fromEntries(new FormData(ev.target).entries());
+          const formData = new FormData(ev.target);
+          const dados = Object.fromEntries(formData.entries());
+
+          if (dados.dataRecebimentoEnvelope) dados.dataRecebimentoEnvelope = converterDataBrParaIso(dados.dataRecebimentoEnvelope);
+          if (dados.dataDigitalizacao) dados.dataDigitalizacao = converterDataBrParaIso(dados.dataDigitalizacao);
+          if (dados.dataEnvioCliente) dados.dataEnvioCliente = converterDataBrParaIso(dados.dataEnvioCliente);
+
           dados.valorFrete = parseFloat(dados.valorFrete || 0);
           dados.adiantamento = parseFloat(dados.adiantamento || 0);
           dados.saldo = parseFloat((dados.valorFrete - dados.adiantamento).toFixed(2));
           if (dados.status === 'Enviado para recebimento') dados.dataEnvio = new Date().toISOString();
+
           await update(ref(db, `saldos/${key}`), dados);
           modal.remove();
         });
